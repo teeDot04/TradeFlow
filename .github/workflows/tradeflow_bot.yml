@@ -1,0 +1,39 @@
+name: TradeFlow Bot
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Run every 4 hours
+  workflow_dispatch: # Manual Force Run
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Important for pushing state back
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests
+
+      - name: Run Bot Scan
+        env:
+          # Add Secrets for Real Trading later
+          IS_PAPER: "True" 
+        run: python main.py
+
+      - name: Commit State & Journal
+        run: |
+          git config --global user.name 'TradeFlow Bot'
+          git config --global user.email 'bot@tradeflow.app'
+          git add bot_state.json trades_journal.csv
+          git commit -m "🤖 Bot Scan: Updated State & Journal" || echo "No changes to commit"
+          git push

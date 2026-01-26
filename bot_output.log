@@ -1,0 +1,5 @@
+nohup: ignoring input
+  File "/home/teedot/Documents/projects/Trading journal./pure_python_bot.py", line 222
+    global Paper_Balance
+    ^^^^^^^^^^^^^^^^^^^^
+SyntaxError: name 'Paper_Balance' is used prior to global declaration

@@ -1,0 +1,9 @@
+{
+  "name": "trading-journal",
+  "version": "1.0.0",
+  "description": "ML Trading Journal Application",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "start": "python3 -m http.server 8080"
+  }
+}
