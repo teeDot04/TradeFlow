@@ -6,10 +6,30 @@ import os
 import sys
 from datetime import datetime
 
+try:
+    import ccxt
+except ImportError:
+    ccxt = None
+
 # ============================================================
 # ⚙️ CONFIGURATION (HYBRID: CHOP + PYRAMID TURTLE)
 # ============================================================
 SYMBOLS = ['SOL-USDT', 'LINK-USDT', 'XRP-USDT', 'DOGE-USDT', 'ETH-USDT']
+# Check Environment for Real Trading
+IS_PAPER = os.environ.get('IS_PAPER', 'True').lower() == 'true'
+
+EXCHANGE = None
+if not IS_PAPER and ccxt:
+    try:
+        EXCHANGE = ccxt.okx({
+            'apiKey': os.environ.get('OKX_API_KEY'),
+            'secret': os.environ.get('OKX_SECRET'),
+            'password': os.environ.get('OKX_PASSWORD'),
+        })
+        print("✅ OKX Exchange Connected")
+    except Exception as e:
+        print(f"❌ Failed to connect to OKX: {e}")
+
 TIMEFRAME = '4H'
 
 # COMMON PARAMS
@@ -151,8 +171,31 @@ def fetch_candles(instId):
 # ============================================================
 # 🤖 MAIN ONE-SHOT LOGIC
 # ============================================================
+def execute_real_trade(symbol, side, size_usd):
+    if not EXCHANGE: return 0
+    try:
+        # Get Price
+        ticker = EXCHANGE.fetch_ticker(symbol)
+        price = ticker['last']
+        amount = size_usd / price
+        
+        # OKX requires size in Base Asset usually, or valid precision
+        # CCXT handles precision often, but let's be safe.
+        # Checking Min Amount? 
+        # For 'market' buy/sell.
+        
+        print(f"💸 EXECUTING REAL {side} on {symbol} for ${size_usd}...")
+        order = EXCHANGE.create_market_order(symbol, side.lower(), amount)
+        print(f"   ✅ ORDER FILLED: {order['id']}")
+        return order
+        
+    except Exception as e:
+        print(f"   ❌ EXECUTION ERROR: {e}")
+        return None
+
 def main():
     print(f"🚀 Running Bot Scan: {datetime.now()}")
+    print(f"   Mode: {'PAPER' if IS_PAPER else 'REAL MONEY ⚠️'}")
     
     state = load_state()
     balance = state['balance']
@@ -199,6 +242,7 @@ def main():
             exit = False
             pnl_amt = 0
             reason = ""
+            side = "sell"
             
             if pos.get('tp', 0) > 0 and curr_price >= pos['tp']:
                 exit = True
@@ -217,15 +261,15 @@ def main():
                     reinvest = pnl_amt * 0.75
                     bank = pnl_amt * 0.25
                     balance += (pos['size'] + reinvest)
-                    # Banked goes to 'void' (Safe) or stays in balance?
-                    # User wants to reinvest 75%. Means 25% is withdrawn/banked.
-                    # We will NOT add the 25% 'bank' back to 'balance'.
-                    # balance only tracks TRADING capital.
                     print(f"💰 BANKED ${bank:.2f} PROFIT! (Reinvested ${reinvest:.2f})")
                 else:
                     balance += (pos['size'] + pnl_amt) # Loss reduces balance
                 
                 log_trade(symbol, "SELL", curr_price, pos['size'], reason, pnl_amt)
+                
+                # REAL EXECUTION
+                if not IS_PAPER: execute_real_trade(symbol, 'sell', pos['size']) # Sell full size
+                
                 del positions[symbol]
                 
             else:
@@ -251,6 +295,9 @@ def main():
                             
                             print(f"🚀 PYRAMID ADD {symbol} @ {curr_price}")
                             log_trade(symbol, "BUY_ADD", curr_price, add_size, "PYRAMID")
+                            
+                            # REAL EXECUTION
+                            if not IS_PAPER: execute_real_trade(symbol, 'buy', add_size)
 
         # 2. MANAGE ENTRIES
         else:
@@ -258,33 +305,41 @@ def main():
                 continue
                 
             trade_size = ALLOCATION_PER_SYMBOL
+            entry_signal = False
+            type_tag = ""
+            tp = 0
+            sl = 0
             
             if regime == "CHOP":
                 if rsi >= MR_RSI_MIN and rsi <= MR_RSI_MAX:
                     # BUY MEAN REV
-                    balance -= trade_size
-                    positions[symbol] = {
-                        'entry': curr_price, 'avg_price': curr_price,
-                        'size': trade_size,
-                        'tp': curr_price * (1 + MR_TP_PCT),
-                        'sl': curr_price * (1 - MR_SL_PCT),
-                        'type': 'MR'
-                    }
-                    log_trade(symbol, "BUY", curr_price, trade_size, "MEAN_REV_ENTRY")
+                    entry_signal = True
+                    type_tag = 'MR'
+                    tp = curr_price * (1 + MR_TP_PCT)
+                    sl = curr_price * (1 - MR_SL_PCT)
                     
             elif regime == "BULL":
                 if curr_price > donchian_high:
                     # BUY TURTLE
-                    balance -= trade_size
-                    positions[symbol] = {
-                        'entry': curr_price, 'avg_price': curr_price,
-                        'size': trade_size,
-                        'tp': 0, # Infinite
-                        'sl': donchian_low,
-                        'type': 'TF',
-                        'adds_count': 0, 'last_add_price': curr_price
-                    }
-                    log_trade(symbol, "BUY", curr_price, trade_size, "TURTLE_ENTRY")
+                    entry_signal = True
+                    type_tag = 'TF'
+                    tp = 0 # Infinite
+                    sl = donchian_low
+            
+            if entry_signal:
+                balance -= trade_size
+                positions[symbol] = {
+                    'entry': curr_price, 'avg_price': curr_price,
+                    'size': trade_size,
+                    'tp': tp,
+                    'sl': sl,
+                    'type': type_tag,
+                    'adds_count': 0, 'last_add_price': curr_price
+                }
+                log_trade(symbol, "BUY", curr_price, trade_size, f"{type_tag}_ENTRY")
+                
+                # REAL EXECUTION
+                if not IS_PAPER: execute_real_trade(symbol, 'buy', trade_size)
     
     # Save State
     state['balance'] = balance
