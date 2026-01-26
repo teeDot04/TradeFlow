@@ -111,9 +111,79 @@ def rma(data, period):
     for i in range(period, len(data)):
         res[i] = (data[i] * alpha) + (res[i-1] * (1 - alpha))
     return res
-# ... (Calculations Same)
+def calc_rsi(closes, period=14):
+    if len(closes) < period + 1: return None
+    deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+    gains = [max(0, d) for d in deltas]
+    losses = [max(0, -d) for d in deltas]
+    avg_gain = rma(gains, period)
+    avg_loss = rma(losses, period)
+    if avg_loss[-1] == 0: return 100.0
+    rs = avg_gain[-1] / avg_loss[-1]
+    return 100 - (100 / (1 + rs))
 
-# ... (Fetch Same)
+def calc_atr(highs, lows, closes, period=14):
+    if len(closes) < period: return None
+    tr = []
+    for i in range(len(closes)):
+        if i == 0:
+            tr.append(highs[i] - lows[i])
+        else:
+            hl = highs[i] - lows[i]
+            hc = abs(highs[i] - closes[i-1])
+            lc = abs(lows[i] - closes[i-1])
+            tr.append(max(hl, hc, lc))
+    atr_series = rma(tr, period)
+    return atr_series[-1]
+
+def calc_full_adx(highs, lows, closes, period=14):
+    if len(closes) < period*2: return 0
+    dm_plus = []
+    dm_minus = []
+    tr = []
+    for i in range(len(closes)):
+        if i == 0:
+            dm_plus.append(0); dm_minus.append(0); tr.append(highs[i]-lows[i])
+            continue
+        up = highs[i] - highs[i-1]
+        down = lows[i-1] - lows[i]
+        dm_plus.append(up if up > down and up > 0 else 0)
+        dm_minus.append(down if down > up and down > 0 else 0)
+        tr.append(max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1])))
+        
+    atr = rma(tr, period)
+    smooth_dp = rma(dm_plus, period)
+    smooth_dm = rma(dm_minus, period)
+    dx = []
+    for i in range(len(closes)):
+        if atr[i] and atr[i] > 0:
+            p = 100 * smooth_dp[i] / atr[i]
+            m = 100 * smooth_dm[i] / atr[i]
+            denom = p + m
+            dx.append(100 * abs(p - m) / denom if denom > 0 else 0)
+        else:
+            dx.append(0)
+    
+    adx_series = rma(dx, period)
+    return adx_series[-1]
+
+def fetch_candles(instId):
+    try:
+        url = f"https://www.okx.com/api/v5/market/candles?instId={instId}&bar={TIMEFRAME}&limit=200"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            if data['code'] == '0':
+                closes = []; highs = []; lows = []
+                for c in data['data']:
+                    highs.append(float(c[2]))
+                    lows.append(float(c[3]))
+                    closes.append(float(c[4]))
+                highs.reverse(); lows.reverse(); closes.reverse()
+                return highs, lows, closes
+    except Exception as e:
+        print(f"   ⚠️ Error fetching {instId}: {e}")
+    return [], [], []
 
 # ============================================================
 # 🤖 MAIN ONE-SHOT LOGIC
