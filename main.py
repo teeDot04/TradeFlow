@@ -146,6 +146,21 @@ def main():
     balance = state['balance']
     positions = state['positions']
     
+    # SYNC REAL BALANCE
+    if not IS_PAPER and EXCHANGE:
+        try:
+            bal_data = EXCHANGE.fetch_balance()
+            # Handle different CCXT balance structures (usually 'free' or 'total')
+            # OKX typically returns 'USDT' key provided by CCXT unification
+            usdt_free = bal_data.get('USDT', {}).get('free', 0.0)
+            if usdt_free is None: usdt_free = 0.0
+            
+            state['balance'] = usdt_free # Sync state
+            balance = usdt_free # Update local var
+            print(f"💰 REAL WALLET SYNC: ${balance:.2f} USDT Available")
+        except Exception as e:
+            print(f"⚠️ Failed to fetch real balance: {e}")
+    
     print(f"   Balance: ${balance:.2f} | Positions: {len(positions)}")
     
     for symbol in SYMBOLS:
