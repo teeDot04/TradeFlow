@@ -14,6 +14,9 @@ import com.tradeflow.journal.ui.components.TradeDetailCard
 import com.tradeflow.journal.ui.components.TradeListItem
 import com.tradeflow.journal.viewmodel.TradeViewModel
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.material3.DatePickerDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +71,11 @@ fun TradesScreen(viewModel: TradeViewModel) {
             ) {
                 // Time Filter Components
                 var selectedFilter by remember { mutableStateOf("All Time") }
-                val filters = listOf("All Time", "Last 7 Days", "Last 30 Days", "This Year")
+                val filters = listOf("All Time", "Last 7 Days", "Last 30 Days", "This Year", "Custom Range")
+                
+                var showDateRangePicker by remember { mutableStateOf(false) }
+                var customStartDate by remember { mutableStateOf<Long?>(null) }
+                var customEndDate by remember { mutableStateOf<Long?>(null) }
                 
                 ScrollableTabRow(
                     selectedTabIndex = filters.indexOf(selectedFilter),
@@ -86,13 +93,56 @@ fun TradesScreen(viewModel: TradeViewModel) {
                     filters.forEach { filter ->
                         Tab(
                             selected = selectedFilter == filter,
-                            onClick = { selectedFilter = filter },
+                            onClick = { 
+                                if (filter == "Custom Range") {
+                                    showDateRangePicker = true
+                                } else {
+                                    selectedFilter = filter 
+                                }
+                            },
                             text = { 
                                 Text(
                                     filter, 
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = if(selectedFilter == filter) FontWeight.Bold else FontWeight.Normal
                                 ) 
+                            }
+                        )
+                    }
+                }
+                
+                if (showDateRangePicker) {
+                    val datePickerState = rememberDateRangePickerState()
+                    DatePickerDialog(
+                        onDismissRequest = { showDateRangePicker = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showDateRangePicker = false
+                                    if (datePickerState.selectedStartDateMillis != null) {
+                                        customStartDate = datePickerState.selectedStartDateMillis
+                                        customEndDate = datePickerState.selectedEndDateMillis ?: (customStartDate!! + 86400000L)
+                                        selectedFilter = "Custom Range"
+                                    }
+                                }
+                            ) {
+                                Text("Apply")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDateRangePicker = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    ) {
+                        DateRangePicker(
+                            state = datePickerState,
+                            modifier = Modifier.fillMaxWidth().height(500.dp),
+                            title = {
+                                Text(
+                                    text = "Select Data Range", // Typo fix: Date Range
+                                    modifier = Modifier.padding(16.dp)
+                                )
                             }
                         )
                     }
@@ -114,6 +164,13 @@ fun TradesScreen(viewModel: TradeViewModel) {
                                 calendar.timeInMillis = it.entryTime
                                 calendar.get(java.util.Calendar.YEAR) == currentYear
                             }
+                        }
+                        "Custom Range" -> {
+                             if (customStartDate != null) {
+                                 trades.filter { 
+                                     it.entryTime >= customStartDate!! && it.entryTime <= (customEndDate ?: Long.MAX_VALUE)
+                                 }
+                             } else trades
                         }
                         else -> trades
                     }

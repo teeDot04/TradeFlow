@@ -166,40 +166,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                 }
             }
 
-            // --- TRADING PARAMETERS ---
-            item {
-                SettingsSection(title = "Trading Parameters") {
-                    SettingsCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = makerFee,
-                                onValueChange = { 
-                                    makerFee = it 
-                                    it.toDoubleOrNull()?.let { fee -> viewModel.saveMakerFee(fee) }
-                                },
-                                label = { Text("Maker Fee (%)") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            OutlinedTextField(
-                                value = takerFee,
-                                onValueChange = { 
-                                    takerFee = it 
-                                    it.toDoubleOrNull()?.let { fee -> viewModel.saveTakerFee(fee) }
-                                },
-                                label = { Text("Taker Fee (%)") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                        }
-                    }
-                }
-            }
+
 
             // --- DATA MANAGEMENT ---
             item {
