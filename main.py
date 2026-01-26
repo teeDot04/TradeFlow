@@ -254,6 +254,7 @@ def main():
             continue
             
         regime = "BULL" if adx >= 25 else "CHOP"
+        print(f"   🔎 {symbol} (${curr_price:.2f}) | RSI: {rsi:.1f} | ADX: {adx:.1f} [{regime}] | ATR: {atr_pct*100:.2f}%")
         
         # 1. MANAGE EXITS & PYRAMIDS
         if symbol in positions:
