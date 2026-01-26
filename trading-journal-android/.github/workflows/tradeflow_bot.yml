@@ -1,0 +1,45 @@
+name: TradeFlow v2 Bot
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Runs every 4 hours
+  workflow_dispatch: # Manual trigger
+    inputs:
+      mock_trade:
+        description: 'Run System Test (Force Mock Trade)?'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push the CSV back to repo
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Libraries
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt || pip install ccxt pandas pandas_ta numpy requests yfinance
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'TradeFlow Bot'
+          git config --global user.email 'bot@tradeflow.app'
+
+      - name: Run Analysis
+        env:
+          OKX_API_KEY: ${{ secrets.OKX_API_KEY }}
+          OKX_SECRET: ${{ secrets.OKX_SECRET }}
+          OKX_PASSWORD: ${{ secrets.OKX_PASSWORD }}
+          MOCK_TRADE: ${{ github.event.inputs.mock_trade }}
+        run: python main.py
