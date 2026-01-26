@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: '0 */4 * * *' # Run every 4 hours
   workflow_dispatch: # Manual Force Run
+    inputs:
+      execution_mode:
+        description: 'Execution Mode'
+        required: true
+        default: 'REAL MONEY'
+        type: choice
+        options:
+        - 'REAL MONEY'
+        - 'Paper Mode'
 
 jobs:
   run-bot:
@@ -22,18 +31,21 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install requests
+          pip install requests ccxt
 
       - name: Run Bot Scan
         env:
-          # Add Secrets for Real Trading later
-          IS_PAPER: "True" 
+          # If manual input is 'Paper Mode', set IS_PAPER=True. Otherwise (Cron or Real), set False.
+          IS_PAPER: ${{ github.event.inputs.execution_mode == 'Paper Mode' && 'True' || 'False' }}
+          OKX_API_KEY: ${{ secrets.OKX_API_KEY }}
+          OKX_SECRET: ${{ secrets.OKX_SECRET }}
+          OKX_PASSWORD: ${{ secrets.OKX_PASSWORD }}
         run: python main.py
 
       - name: Commit State & Journal
         run: |
           git config --global user.name 'TradeFlow Bot'
           git config --global user.email 'bot@tradeflow.app'
-          git add bot_state.json trades_journal.csv
+          git add bot_state.json trades_journal.csv trades_export.json
           git commit -m "🤖 Bot Scan: Updated State & Journal" || echo "No changes to commit"
           git push
