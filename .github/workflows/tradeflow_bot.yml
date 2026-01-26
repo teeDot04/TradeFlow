@@ -2,7 +2,7 @@ name: TradeFlow Bot
 
 on:
   schedule:
-    - cron: '0 */4 * * *' # Run every 4 hours
+    - cron: '0 * * * *' # Run EVERY HOUR (More frequent checks)
   workflow_dispatch: # Manual Force Run
     inputs:
       execution_mode:
