@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Adaptive-icon safe zone is the central 66x66 dp circle of the 108x108 viewport.
+         All key marks must stay within x=21..87, y=21..87. -->
+
+    <!-- Up-trend candle / arrow representing TradeFlow. -->
+    <group android:translateX="21" android:translateY="21">
+        <!-- Background candle wick -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M30,10 h6 v46 h-6 z" />
+        <!-- Bullish candle body -->
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M22,18 h22 v30 h-22 z" />
+        <!-- Up arrow -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M33,2 L52,22 L42,22 L42,40 L24,40 L24,22 L14,22 z" />
+    </group>
+</vector>
