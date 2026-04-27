@@ -1,4 +1,6 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file. Repositories for project dependencies are
+// centralised in settings.gradle (FAIL_ON_PROJECT_REPOS is set there),
+// so do NOT declare an `allprojects { repositories { ... } }` block here.
 buildscript {
     ext.kotlin_version = "1.9.0"
     repositories {
@@ -10,15 +12,6 @@ buildscript {
         classpath "com.android.tools.build:gradle:8.2.0"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.chaquo.python:gradle:15.0.1"
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven { url "https://chaquo.com/maven" }
     }
 }
 
