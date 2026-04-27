@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TradeFlow</string>
-    
+
     <!-- Tab Labels -->
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_analytics">Analytics</string>
     <string name="tab_trades">Trades</string>
     <string name="tab_settings">Settings</string>
-    
-    <!-- Dashboard -->
+
+    <!-- Dashboard / Agent -->
+    <string name="agent_dashboard_title">Sovereign Agent</string>
+    <string name="agent_state_idle">State: IDLE</string>
+    <string name="agent_state_fmt">State: %1$s</string>
+    <string name="thought_stream_title">Thought Stream</string>
+    <string name="performance_stats">Performance Stats</string>
+    <string name="recent_trades">Recent Trades</string>
     <string name="total_pnl">Total P&amp;L</string>
     <string name="win_rate">Win Rate</string>
     <string name="profit_factor">Profit Factor</string>
     <string name="avg_return">Avg Return</string>
-    <string name="recent_trades">Recent Trades</string>
-    <string name="performance_stats">Performance Stats</string>
-    
+
     <!-- Analytics -->
     <string name="pnl_over_time">P&amp;L Over Time</string>
     <string name="win_loss_distribution">Win/Loss Distribution</string>
     <string name="trade_distribution">Trade Distribution</string>
     <string name="wins">Wins</string>
     <string name="losses">Losses</string>
-    
+
     <!-- Trades -->
     <string name="all_trades">All Trades</string>
     <string name="search_trades">Search trades…</string>
@@ -30,7 +34,7 @@
     <string name="sort_by_date">Date</string>
     <string name="sort_by_pnl">P&amp;L</string>
     <string name="sort_by_symbol">Symbol</string>
-    
+
     <!-- Settings -->
     <string name="theme">Theme</string>
     <string name="theme_light">Light</string>
@@ -42,8 +46,23 @@
     <string name="clear_data_confirm">Are you sure you want to delete all trades? This cannot be undone.</string>
     <string name="about">About</string>
     <string name="version">Version</string>
-    <string name="app_version">1.0.0</string>
-    
+    <string name="app_version">2.0.0</string>
+
+    <!-- Credentials -->
+    <string name="credentials_section">API Credentials</string>
+    <string name="credentials_hint">Stored encrypted on this device only. Never synced.</string>
+    <string name="okx_api_key">OKX API Key</string>
+    <string name="okx_api_secret">OKX API Secret</string>
+    <string name="okx_api_passphrase">OKX API Passphrase</string>
+    <string name="deepseek_api_key">DeepSeek API Key</string>
+    <string name="save_credentials">Save Credentials</string>
+    <string name="clear_credentials">Clear Credentials</string>
+    <string name="clear_credentials_title">Clear API Keys</string>
+    <string name="clear_credentials_confirm">Remove the stored OKX (key/secret/passphrase) and DeepSeek keys? The agent will stop trading.</string>
+    <string name="credentials_saved">Credentials saved. Agent restarted.</string>
+    <string name="credentials_cleared">Credentials cleared.</string>
+    <string name="credentials_required">All four credentials are required.</string>
+
     <!-- Trade Details -->
     <string name="symbol">Symbol</string>
     <string name="type">Type</string>
@@ -55,7 +74,7 @@
     <string name="pnl">P&amp;L</string>
     <string name="strategy">Strategy</string>
     <string name="notes">Notes</string>
-    
+
     <!-- Actions -->
     <string name="add_trade">Add Trade</string>
     <string name="edit_trade">Edit Trade</string>
@@ -64,7 +83,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="share">Share</string>
-    
+
     <!-- Messages -->
     <string name="export_success">Data exported successfully</string>
     <string name="export_failed">Failed to export data</string>

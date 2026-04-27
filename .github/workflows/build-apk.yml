@@ -1,0 +1,96 @@
+name: Build TradeFlow APK
+
+# Builds the on-device TradeFlow Sovereign Agent (Kotlin + Chaquopy Python)
+# and uploads the unsigned debug APK as a downloadable artifact.
+#
+# Triggers:
+#   - Every push to main / master / any feature branch
+#   - Manual run via the Actions tab (workflow_dispatch)
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "TradeFlow-Android/**"
+      - ".github/workflows/build-apk.yml"
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "TradeFlow-Android/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Assemble debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: TradeFlow-Android
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Python 3.11 (required by Chaquopy)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle caches & wrapper
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('TradeFlow-Android/**/*.gradle*', 'TradeFlow-Android/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Show toolchain versions
+        run: |
+          java -version
+          python3 --version
+          ./gradlew --version
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Locate APK
+        id: locate
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK produced" >&2
+            exit 1
+          fi
+          echo "apk_path=TradeFlow-Android/${APK_PATH}" >> "$GITHUB_OUTPUT"
+          echo "Built: $APK_PATH ($(du -h "$APK_PATH" | cut -f1))"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tradeflow-debug-apk
+          path: ${{ steps.locate.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 14

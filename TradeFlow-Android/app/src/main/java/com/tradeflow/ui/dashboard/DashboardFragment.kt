@@ -10,20 +10,23 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tradeflow.R
-import com.tradeflow.data.Trade
 import com.tradeflow.databinding.FragmentDashboardBinding
-import com.tradeflow.utils.Extensions.toCurrency
-import com.tradeflow.utils.Extensions.toFormattedDate
-import com.tradeflow.utils.Extensions.toPnlColor
-import com.tradeflow.utils.Extensions.toPercentage
 import com.tradeflow.utils.ThemeManager
 
+/**
+ * The Dashboard now shows the agent's real-time "Thought Stream":
+ * timestamped state transitions, reasoning lines from DeepSeek, and
+ * execution receipts from OKX, all pushed up from the Python loop via
+ * [com.tradeflow.agent.ThoughtStream].
+ */
 class DashboardFragment : Fragment() {
+
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
+
     private lateinit var viewModel: DashboardViewModel
-    private lateinit var tradesAdapter: TradesAdapter
-    
+    private lateinit var thoughtAdapter: ThoughtStreamAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,133 +35,76 @@ class DashboardFragment : Fragment() {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         return binding.root
     }
-    
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         viewModel = ViewModelProvider(this)[DashboardViewModel::class.java]
-        
-        // Set up RecyclerView
-        tradesAdapter = TradesAdapter()
-        binding.recentTradesRecyclerView.apply {
-            adapter = tradesAdapter
-            layoutManager = LinearLayoutManager(context)
+
+        thoughtAdapter = ThoughtStreamAdapter()
+        binding.thoughtStreamRecyclerView.apply {
+            adapter = thoughtAdapter
+            layoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         }
-        
-        // Observe data
-        observeViewModel()
-        
-        // Set up swipe refresh
+
+        viewModel.lines.observe(viewLifecycleOwner) { lines ->
+            thoughtAdapter.submit(lines)
+            if (lines.isNotEmpty()) {
+                binding.thoughtStreamRecyclerView.scrollToPosition(lines.size - 1)
+            }
+        }
+
+        viewModel.state.observe(viewLifecycleOwner) { state ->
+            binding.txtAgentState.text = getString(R.string.agent_state_fmt, state)
+        }
+
         binding.swipeRefresh.setOnRefreshListener {
-            // Data automatically updates via LiveData
+            // Stream is push-based; nothing to pull. Just dismiss the spinner.
             binding.swipeRefresh.isRefreshing = false
         }
-        
-        // Theme toggle FAB
-        binding.fabTheme.setOnClickListener {
-            toggleTheme()
-        }
+
+        binding.fabTheme.setOnClickListener { toggleTheme() }
     }
-    
-    private fun observeViewModel() {
-        // Recent trades
-        viewModel.recentTrades.observe(viewLifecycleOwner) { trades ->
-            tradesAdapter.submitList(trades)
-        }
-        
-        // Total P&L
-        viewModel.totalPnl.observe(viewLifecycleOwner) { pnl ->
-            binding.statPnl.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.total_pnl)
-            binding.statPnl.findViewById<TextView>(R.id.statValue).apply {
-                text = pnl.toCurrency()
-                setTextColor(pnl.toPnlColor())
-            }
-        }
-        
-        // Win Rate
-        viewModel.winRate.observe(viewLifecycleOwner) { rate ->
-            binding.statWinRate.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.win_rate)
-            binding.statWinRate.findViewById<TextView>(R.id.statValue).text = 
-                rate.toPercentage()
-        }
-        
-        // Profit Factor
-        viewModel.profitFactor.observe(viewLifecycleOwner) { factor ->
-            binding.statProfitFactor.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.profit_factor)
-            binding.statProfitFactor.findViewById<TextView>(R.id.statValue).text = 
-                String.format("%.2f", factor)
-        }
-        
-        // Average Return
-        viewModel.avgReturn.observe(viewLifecycleOwner) { avg ->
-            binding.statAvgReturn.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.avg_return)
-            binding.statAvgReturn.findViewById<TextView>(R.id.statValue).apply {
-                text = avg.toPercentage()
-                setTextColor(avg.toPnlColor())
-            }
-        }
-    }
-    
+
     private fun toggleTheme() {
-        val currentTheme = ThemeManager.getTheme(requireContext())
-        val newTheme = if (currentTheme == ThemeManager.THEME_LIGHT) {
-            ThemeManager.THEME_DARK
-        } else {
-            ThemeManager.THEME_LIGHT
-        }
-        ThemeManager.saveTheme(requireContext(), newTheme)
-        ThemeManager.applyTheme(newTheme)
+        val current = ThemeManager.getTheme(requireContext())
+        val next = if (current == ThemeManager.THEME_LIGHT) ThemeManager.THEME_DARK
+                   else ThemeManager.THEME_LIGHT
+        ThemeManager.saveTheme(requireContext(), next)
+        ThemeManager.applyTheme(next)
         requireActivity().recreate()
     }
-    
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-    
-    // RecyclerView Adapter
-    private class TradesAdapter : RecyclerView.Adapter<TradesAdapter.TradeViewHolder>() {
-        private var trades = emptyList<Trade>()
-        
-        fun submitList(newTrades: List<Trade>) {
-            trades = newTrades
+
+    private class ThoughtStreamAdapter :
+        RecyclerView.Adapter<ThoughtStreamAdapter.LineViewHolder>() {
+
+        private var lines: List<String> = emptyList()
+
+        fun submit(newLines: List<String>) {
+            lines = newLines
             notifyDataSetChanged()
         }
-        
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TradeViewHolder {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LineViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_trade, parent, false)
-            return TradeViewHolder(view)
+                .inflate(R.layout.item_thought_line, parent, false)
+            return LineViewHolder(view)
         }
-        
-        override fun onBindViewHolder(holder: TradeViewHolder, position: Int) {
-            holder.bind(trades[position])
+
+        override fun onBindViewHolder(holder: LineViewHolder, position: Int) {
+            holder.bind(lines[position])
         }
-        
-        override fun getItemCount() = trades.size
-        
-        class TradeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val symbol: TextView = itemView.findViewById(R.id.tradeSymbol)
-            private val date: TextView = itemView.findViewById(R.id.tradeDate)
-            private val type: TextView = itemView.findViewById(R.id.tradeType)
-            private val pnl: TextView = itemView.findViewById(R.id.tradePnl)
-            private val pnlPercent: TextView = itemView.findViewById(R.id.tradePnlPercent)
-            
-            fun bind(trade: Trade) {
-                symbol.text = trade.symbol
-                date.text = trade.exitDate.toFormattedDate()
-                type.text = trade.type.name
-                
-                val pnlValue = trade.pnl
-                pnl.text = pnlValue.toCurrency()
-                pnl.setTextColor(pnlValue.toPnlColor())
-                
-                pnlPercent.text = trade.pnlPercentage.toPercentage()
-            }
+
+        override fun getItemCount(): Int = lines.size
+
+        class LineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val textView: TextView = itemView.findViewById(R.id.thoughtLineText)
+            fun bind(line: String) { textView.text = line }
         }
     }
 }
