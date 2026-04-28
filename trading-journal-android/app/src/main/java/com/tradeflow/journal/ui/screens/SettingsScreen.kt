@@ -29,15 +29,15 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val trades by viewModel.allTrades.collectAsState()
-    
+
     val savedMakerFee by viewModel.makerFee.collectAsState()
     val savedTakerFee by viewModel.takerFee.collectAsState()
     val gitUrl by viewModel.gitSyncUrl.collectAsState()
-    
+
     var makerFee by remember(savedMakerFee) { mutableStateOf(savedMakerFee.toString()) }
     var takerFee by remember(savedTakerFee) { mutableStateOf(savedTakerFee.toString()) }
 
-    
+
     var showPdfDialog by remember { mutableStateOf(false) }
     var showAvoidedDialog by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
@@ -117,9 +117,9 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                     }
                                 }
                             }
-                            
+
                             // Git URL is now hardcoded in UserPreferencesRepository
-                            
+
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -137,14 +137,14 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                                 )
                             }
-                            
+
                             // Private Repo Support
                             val savedToken by viewModel.gitToken.collectAsState()
                             var tokenInput by remember(savedToken) { mutableStateOf(savedToken ?: "") }
-                            
+
                             OutlinedTextField(
                                 value = tokenInput,
-                                onValueChange = { 
+                                onValueChange = {
                                     tokenInput = it
                                     viewModel.saveGitToken(it)
                                 },
@@ -166,6 +166,209 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                 }
             }
 
+            // --- AI COMMENT AGENT (NEW) ---
+            item {
+                SettingsSection(title = "AI Comment Agent") {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Auto-write trade reasons",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        "An AI agent writes the \"why\" comment for each trade.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                    )
+                                }
+                            }
+
+                            val savedProvider by viewModel.aiProvider.collectAsState()
+                            val savedKey by viewModel.aiApiKey.collectAsState()
+                            val savedBase by viewModel.aiBaseUrl.collectAsState()
+                            val savedModel by viewModel.aiModel.collectAsState()
+                            val autoGen by viewModel.aiAutoGenerate.collectAsState()
+
+                            var providerInput by remember(savedProvider) { mutableStateOf(savedProvider) }
+                            var keyInput by remember(savedKey) { mutableStateOf(savedKey) }
+                            var baseInput by remember(savedBase) { mutableStateOf(savedBase) }
+                            var modelInput by remember(savedModel) { mutableStateOf(savedModel) }
+
+                            // Provider selector
+                            var providerExpanded by remember { mutableStateOf(false) }
+                            val providerOptions = listOf(
+                                Triple("DeepSeek", "https://api.deepseek.com/v1", "deepseek-chat"),
+                                Triple("OpenAI", "https://api.openai.com/v1", "gpt-4o-mini"),
+                                Triple("OpenRouter", "https://openrouter.ai/api/v1", "openai/gpt-4o-mini"),
+                                Triple("Groq", "https://api.groq.com/openai/v1", "llama-3.1-70b-versatile"),
+                                Triple("Together AI", "https://api.together.xyz/v1", "meta-llama/Llama-3-8b-chat-hf"),
+                                Triple("Custom", "", ""),
+                            )
+
+                            ExposedDropdownMenuBox(
+                                expanded = providerExpanded,
+                                onExpandedChange = { providerExpanded = !providerExpanded },
+                            ) {
+                                OutlinedTextField(
+                                    value = providerInput,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Provider") },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    )
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = providerExpanded,
+                                    onDismissRequest = { providerExpanded = false },
+                                ) {
+                                    providerOptions.forEach { (name, base, model) ->
+                                        DropdownMenuItem(
+                                            text = { Text(name) },
+                                            onClick = {
+                                                providerInput = name
+                                                viewModel.saveAiProvider(name)
+                                                if (base.isNotBlank()) {
+                                                    baseInput = base
+                                                    viewModel.saveAiBaseUrl(base)
+                                                }
+                                                if (model.isNotBlank()) {
+                                                    modelInput = model
+                                                    viewModel.saveAiModel(model)
+                                                }
+                                                providerExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            OutlinedTextField(
+                                value = keyInput,
+                                onValueChange = {
+                                    keyInput = it
+                                    viewModel.saveAiApiKey(it)
+                                },
+                                label = { Text("API Key") },
+                                placeholder = { Text("sk-... / dsk-...") },
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                )
+                            )
+
+                            OutlinedTextField(
+                                value = baseInput,
+                                onValueChange = {
+                                    baseInput = it
+                                    viewModel.saveAiBaseUrl(it)
+                                },
+                                label = { Text("Base URL") },
+                                placeholder = { Text("https://api.deepseek.com/v1") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                )
+                            )
+
+                            OutlinedTextField(
+                                value = modelInput,
+                                onValueChange = {
+                                    modelInput = it
+                                    viewModel.saveAiModel(it)
+                                },
+                                label = { Text("Model") },
+                                placeholder = { Text("deepseek-chat") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                )
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Auto-generate on import",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        "Fill notes with AI when missing",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Switch(
+                                    checked = autoGen,
+                                    onCheckedChange = { viewModel.saveAiAutoGenerate(it) }
+                                )
+                            }
+
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val ok = viewModel.testAiConnection()
+                                        Toast.makeText(
+                                            context,
+                                            if (ok) "AI agent connected" else "AI agent failed - check key/URL",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = keyInput.isNotBlank(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Outlined.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Test Connection")
+                            }
+                        }
+                    }
+                }
+            }
+
             // --- TRADING PARAMETERS ---
             item {
                 SettingsSection(title = "Trading Parameters") {
@@ -176,8 +379,8 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                         ) {
                             OutlinedTextField(
                                 value = makerFee,
-                                onValueChange = { 
-                                    makerFee = it 
+                                onValueChange = {
+                                    makerFee = it
                                     it.toDoubleOrNull()?.let { fee -> viewModel.saveMakerFee(fee) }
                                 },
                                 label = { Text("Maker Fee (%)") },
@@ -187,8 +390,8 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             )
                             OutlinedTextField(
                                 value = takerFee,
-                                onValueChange = { 
-                                    takerFee = it 
+                                onValueChange = {
+                                    takerFee = it
                                     it.toDoubleOrNull()?.let { fee -> viewModel.saveTakerFee(fee) }
                                 },
                                 label = { Text("Taker Fee (%)") },
@@ -214,7 +417,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 onClick = { launcher.launch("*/*") }
                             )
                             Divider(modifier = Modifier.padding(vertical = 4.dp))
-                            
+
                             // Export CSV
                             SettingsActionItem(
                                 icon = Icons.Filled.TableChart,
@@ -234,7 +437,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 },
                                 enabled = !isExporting && trades.isNotEmpty()
                             )
-                            
+
                             // Export PDF
                             SettingsActionItem(
                                 icon = Icons.Filled.PictureAsPdf,
@@ -243,9 +446,9 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 onClick = { showPdfDialog = true },
                                 enabled = !isExporting && trades.isNotEmpty()
                             )
-                            
+
                             Divider(modifier = Modifier.padding(vertical = 4.dp))
-                            
+
                             // Delete All Data (Destructive)
                             var showDeleteConfirm by remember { mutableStateOf(false) }
                             SettingsActionItem(
@@ -256,7 +459,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 textColor = MaterialTheme.colorScheme.error,
                                 enabled = trades.isNotEmpty()
                             )
-                            
+
                             if (showDeleteConfirm) {
                                 AlertDialog(
                                     onDismissRequest = { showDeleteConfirm = false },
@@ -287,7 +490,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
             }
 
 
-            
+
             // --- ABOUT ---
             item {
                 SettingsSection(title = "System Intelligence") {
@@ -309,7 +512,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "TradeFlow v2.1.6",
+                        "TradeFlow v2.2.0-agent",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -348,7 +551,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
             }
         )
     }
-    
+
     if (showAvoidedDialog) {
          val avoidedTrades = trades.filter { it.setupQuality == 0 }
          AvoidedTradesDialog(
@@ -416,8 +619,8 @@ fun SettingsActionItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    icon, 
-                    contentDescription = null, 
+                    icon,
+                    contentDescription = null,
                     tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                 )
             }
@@ -436,7 +639,7 @@ fun SettingsActionItem(
                 )
             }
             Icon(
-                Icons.Filled.ChevronRight, 
+                Icons.Filled.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             )

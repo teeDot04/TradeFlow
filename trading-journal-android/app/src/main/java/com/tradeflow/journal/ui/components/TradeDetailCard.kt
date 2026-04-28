@@ -1,7 +1,9 @@
 package com.tradeflow.journal.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +18,8 @@ import java.util.*
 @Composable
 fun TradeDetailCard(
     trade: Trade,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onRegenerateNotes: ((Trade) -> Unit)? = null,
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -107,13 +110,13 @@ fun TradeDetailCard(
             // OHLCV Data
             trade.ohlcvData?.let { ohlcv ->
                 Divider()
-                
+
                 Text(
                     "Market Data (OHLCV)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -130,7 +133,7 @@ fun TradeDetailCard(
                             DetailItem("Avg Price", "$${String.format("%.2f", ohlcv.avgPrice)}")
                             DetailItem("Volatility", "${String.format("%.2f", ohlcv.volatility)}%")
                         }
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -138,7 +141,7 @@ fun TradeDetailCard(
                             DetailItem("Max High", "$${String.format("%.2f", ohlcv.maxHigh)}")
                             DetailItem("Min Low", "$${String.format("%.2f", ohlcv.minLow)}")
                         }
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -177,7 +180,50 @@ fun TradeDetailCard(
                         .format(Date(trade.exitTime))
                 )
             }
-            
+
+            // --- AI Comment / Notes ---
+            Divider()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Agent Comment",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (onRegenerateNotes != null) {
+                    TextButton(
+                        onClick = { onRegenerateNotes(trade) },
+                    ) {
+                        Icon(
+                            Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Regenerate")
+                    }
+                }
+            }
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(
+                    text = trade.notes.ifBlank { "No comment yet. Tap Regenerate to ask the AI." },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp),
+                    color = if (trade.notes.isBlank())
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else
+                        MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
             // --- Advanced AI Data (Claude Model) ---
             if (trade.microstructure != null || trade.marketContext != null || trade.riskMetrics != null) {
                 Divider()
@@ -186,7 +232,7 @@ fun TradeDetailCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Card(
                     colors = CardDefaults.cardColors(
                          containerColor = MaterialTheme.colorScheme.surface
@@ -196,20 +242,20 @@ fun TradeDetailCard(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        trade.microstructure?.let { 
-                            DetailItem("Microstructure", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", "")) 
+                        trade.microstructure?.let {
+                            DetailItem("Microstructure", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", ""))
                         }
-                        trade.marketContext?.let { 
-                            DetailItem("Market Context", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", "")) 
+                        trade.marketContext?.let {
+                            DetailItem("Market Context", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", ""))
                         }
-                        trade.riskMetrics?.let { 
-                            DetailItem("Risk Metrics", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", "")) 
+                        trade.riskMetrics?.let {
+                            DetailItem("Risk Metrics", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", ""))
                         }
-                        trade.sentimentData?.let { 
-                            DetailItem("Sentiment", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", "")) 
+                        trade.sentimentData?.let {
+                            DetailItem("Sentiment", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", ""))
                         }
-                        trade.fundamentalData?.let { 
-                            DetailItem("Fundamental", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", "")) 
+                        trade.fundamentalData?.let {
+                            DetailItem("Fundamental", it.replace("|", ", ").replace("\"", "").replace("{", "").replace("}", ""))
                         }
                     }
                 }

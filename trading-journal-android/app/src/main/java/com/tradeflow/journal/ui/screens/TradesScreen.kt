@@ -56,7 +56,8 @@ fun TradesScreen(viewModel: TradeViewModel) {
                         onDelete = {
                             viewModel.deleteTrade(selectedTrade!!)
                             viewModel.selectTrade(null) // Go back to list
-                        }
+                        },
+                        onRegenerateNotes = { viewModel.regenerateNotes(it) }
                     )
                 }
             }
