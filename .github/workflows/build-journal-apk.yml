@@ -41,8 +41,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Strip hardcoded org.gradle.java.home
+        run: |
+          if [ -f gradle.properties ]; then
+            sed -i '/^org\.gradle\.java\.home=/d' gradle.properties
+            echo "--- gradle.properties after strip ---"
+            cat gradle.properties
+          fi
+
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        env:
+          JAVA_TOOL_OPTIONS: ''
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace -Dorg.gradle.java.home="$JAVA_HOME"
 
       - name: Locate APK
         id: apk
