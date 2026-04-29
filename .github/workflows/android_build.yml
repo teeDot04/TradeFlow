@@ -24,15 +24,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate Gradle Wrapper (Locked to 8.9)
-        run: gradle wrapper --gradle-version 8.9
-        working-directory: TradeFlow-Android
-
-      - name: Grant Gradle Permissions
-        run: chmod +x TradeFlow-Android/gradlew
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.9
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
         working-directory: TradeFlow-Android
 
       - name: Upload Debug APK Artifact
