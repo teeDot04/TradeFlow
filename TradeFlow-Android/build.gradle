@@ -5,15 +5,6 @@ plugins {
     id 'com.chaquo.python' version '15.0.1' apply false
 }
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url "https://chaquo.com/maven" }
-        gradlePluginPortal()
-    }
-}
-
 tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
 }
