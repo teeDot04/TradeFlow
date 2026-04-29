@@ -24,6 +24,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper
+        working-directory: TradeFlow-Android
+
       - name: Grant Gradle Permissions
         run: chmod +x TradeFlow-Android/gradlew
 
