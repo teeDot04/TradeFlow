@@ -65,7 +65,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Data Management Section -->
+        <!-- API Credentials Section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,29 +82,92 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/export_data"
+                    android:text="API Credentials"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnExportCsv"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/export_csv"
-                    app:icon="@android:drawable/ic_menu_save"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
+                    android:layout_marginBottom="8dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:passwordToggleEnabled="true">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etOkxApiKey"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="OKX API Key"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:passwordToggleEnabled="true">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etOkxApiSecret"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="OKX API Secret"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:passwordToggleEnabled="true">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etOkxPassphrase"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="OKX Passphrase"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:passwordToggleEnabled="true">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etDeepSeekApiKey"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="DeepSeek API Key"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:passwordToggleEnabled="true">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etTavilyApiKey"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Tavily API Key"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnClearData"
+                    android:id="@+id/btnSaveCredentials"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/clear_data"
-                    android:layout_marginTop="8dp"
-                    app:icon="@android:drawable/ic_menu_delete"
-                    app:iconTint="@color/loss_red"
-                    android:textColor="@color/loss_red"
-                    style="@style/Widget.Material3.Button.TextButton" />
+                    android:text="Save &amp; Restart Agent"
+                    app:icon="@android:drawable/ic_menu_save" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

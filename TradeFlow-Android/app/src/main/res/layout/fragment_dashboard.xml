@@ -86,7 +86,76 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Recent Trades Section -->
+            <!-- Agent Thought Stream Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Agent Thought Stream"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <ImageView
+                            android:id="@+id/heartbeatLed"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:layout_weight="1"
+                            android:src="@drawable/ic_launcher_foreground"
+                            app:tint="@color/profit_green"
+                            android:alpha="0.3"
+                            android:contentDescription="Heartbeat LED" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchSovereignControl"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sovereign Control"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPanic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="PANIC: CLOSE ALL"
+                        android:backgroundTint="@color/loss_red"
+                        android:textColor="@android:color/white"
+                        android:layout_marginBottom="12dp"
+                        app:icon="@android:drawable/ic_dialog_alert"
+                        app:iconTint="@android:color/white" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/thoughtStreamRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="150dp"
+                        android:scrollbars="vertical"
+                        android:nestedScrollingEnabled="true" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary Colors -->
-    <color name="primary">#2196F3</color>
-    <color name="primary_dark">#1976D2</color>
-    <color name="primary_light">#BBDEFB</color>
-    <color name="accent">#FF9800</color>
+    <color name="primary">#FF8A80</color>
+    <color name="primary_dark">#D50000</color>
+    <color name="primary_light">#FFCDD2</color>
+    <color name="accent">#FF5252</color>
     
     <!-- Background Colors - Light -->
     <color name="background_light">#F5F5F5</color>

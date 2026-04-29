@@ -6,19 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.tradeflow.R
 import com.tradeflow.databinding.FragmentSettingsBinding
-import com.tradeflow.utils.CsvExporter
+import com.tradeflow.utils.EncryptedPrefs
 import com.tradeflow.utils.ThemeManager
+import com.tradeflow.TradingForegroundService
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: SettingsViewModel
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,9 +29,8 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        viewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
-        
         setupThemeSelector()
+        loadCredentials()
         setupButtons()
     }
     
@@ -60,60 +56,29 @@ class SettingsFragment : Fragment() {
             requireActivity().recreate()
         }
     }
+
+    private fun loadCredentials() {
+        binding.etOkxApiKey.setText(EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_OKX_API_KEY))
+        binding.etOkxApiSecret.setText(EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_OKX_API_SECRET))
+        binding.etOkxPassphrase.setText(EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_OKX_PASSPHRASE))
+        binding.etDeepSeekApiKey.setText(EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_DEEPSEEK_API_KEY))
+        binding.etTavilyApiKey.setText(EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_TAVILY_API_KEY))
+    }
     
     private fun setupButtons() {
-        // Export CSV
-        binding.btnExportCsv.setOnClickListener {
-            viewModel.allTrades.observe(viewLifecycleOwner) { trades ->
-                if (trades.isNotEmpty()) {
-                    val uri = CsvExporter.exportTradesToCsv(requireContext(), trades)
-                    
-                    if (uri != null) {
-                        // Share the file
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/csv"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
-                        
-                        Toast.makeText(
-                            requireContext(),
-                            getString(R.string.export_success),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            getString(R.string.export_failed),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.no_trades),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-        
-        // Clear all data
-        binding.btnClearData.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.clear_data))
-                .setMessage(getString(R.string.clear_data_confirm))
-                .setPositiveButton(getString(R.string.delete)) { _, _ ->
-                    viewModel.clearAllData()
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.data_cleared),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                .setNegativeButton(getString(R.string.cancel), null)
-                .show()
+        binding.btnSaveCredentials.setOnClickListener {
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_OKX_API_KEY, binding.etOkxApiKey.text.toString())
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_OKX_API_SECRET, binding.etOkxApiSecret.text.toString())
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_OKX_PASSPHRASE, binding.etOkxPassphrase.text.toString())
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_DEEPSEEK_API_KEY, binding.etDeepSeekApiKey.text.toString())
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_TAVILY_API_KEY, binding.etTavilyApiKey.text.toString())
+            
+            Toast.makeText(requireContext(), "Credentials Saved. Restarting Agent...", Toast.LENGTH_SHORT).show()
+            
+            // Restart the service to apply new credentials in Python
+            val intent = Intent(requireContext(), TradingForegroundService::class.java)
+            requireContext().stopService(intent)
+            requireContext().startForegroundService(intent)
         }
     }
     

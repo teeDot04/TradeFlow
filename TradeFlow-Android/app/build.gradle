@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.chaquo.python'
 }
 
 android {
@@ -16,6 +17,19 @@ android {
         versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+        
+        python {
+            version "3.11"
+            pip {
+                install "ccxt"
+                install "websockets"
+                install "requests"
+            }
+        }
     }
 
     buildTypes {
@@ -44,6 +58,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
     // Material Design
     implementation 'com.google.android.material:material:1.11.0'

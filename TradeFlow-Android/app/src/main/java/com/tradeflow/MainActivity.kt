@@ -56,6 +56,22 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             binding.bottomNavigation.selectedItemId = R.id.navigation_dashboard
         }
+        
+        checkBatteryOptimizationsAndStartService()
+    }
+    
+    private fun checkBatteryOptimizationsAndStartService() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            val powerManager = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.data = android.net.Uri.parse("package:$packageName")
+                startActivity(intent)
+            }
+        }
+        
+        val serviceIntent = android.content.Intent(this, TradingForegroundService::class.java)
+        startForegroundService(serviceIntent)
     }
     
     private fun loadFragment(fragment: Fragment) {

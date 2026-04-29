@@ -11,7 +11,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tradeflow.R
 import com.tradeflow.data.Trade
+import com.tradeflow.data.Thought
+import com.tradeflow.data.ThoughtManager
 import com.tradeflow.databinding.FragmentDashboardBinding
+import com.tradeflow.PythonBridge
+import com.tradeflow.utils.EncryptedPrefs
 import com.tradeflow.utils.Extensions.toCurrency
 import com.tradeflow.utils.Extensions.toFormattedDate
 import com.tradeflow.utils.Extensions.toPnlColor
@@ -23,6 +27,7 @@ class DashboardFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: DashboardViewModel
     private lateinit var tradesAdapter: TradesAdapter
+    private lateinit var thoughtAdapter: ThoughtAdapter
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,10 +43,46 @@ class DashboardFragment : Fragment() {
         
         viewModel = ViewModelProvider(this)[DashboardViewModel::class.java]
         
-        // Set up RecyclerView
+        // Set up Trades RecyclerView
         tradesAdapter = TradesAdapter()
         binding.recentTradesRecyclerView.apply {
             adapter = tradesAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
+
+        // Set up Sovereign Control Switch
+        val isSovereignActive = EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_SOVEREIGN_CONTROL) == "true"
+        binding.switchSovereignControl.isChecked = isSovereignActive
+        PythonBridge.toggleAgent(isSovereignActive) // Initial state push
+        
+        binding.switchSovereignControl.setOnCheckedChangeListener { _, isChecked ->
+            EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_SOVEREIGN_CONTROL, isChecked.toString())
+            PythonBridge.toggleAgent(isChecked)
+        }
+
+        // Set up PANIC Button
+        binding.btnPanic.setOnClickListener {
+            binding.switchSovereignControl.isChecked = false
+            PythonBridge.triggerPanic()
+        }
+
+        // Set up Heartbeat Listener
+        PythonBridge.heartbeatListener = {
+            activity?.runOnUiThread {
+                binding.heartbeatLed.animate()
+                    .alpha(1.0f)
+                    .setDuration(100)
+                    .withEndAction {
+                        binding.heartbeatLed.animate().alpha(0.3f).setDuration(300).start()
+                    }
+                    .start()
+            }
+        }
+
+        // Set up Thought Stream RecyclerView
+        thoughtAdapter = ThoughtAdapter()
+        binding.thoughtStreamRecyclerView.apply {
+            adapter = thoughtAdapter
             layoutManager = LinearLayoutManager(context)
         }
         
@@ -50,7 +91,6 @@ class DashboardFragment : Fragment() {
         
         // Set up swipe refresh
         binding.swipeRefresh.setOnRefreshListener {
-            // Data automatically updates via LiveData
             binding.swipeRefresh.isRefreshing = false
         }
         
@@ -61,6 +101,11 @@ class DashboardFragment : Fragment() {
     }
     
     private fun observeViewModel() {
+        // Thoughts
+        ThoughtManager.thoughts.observe(viewLifecycleOwner) { thoughts ->
+            thoughtAdapter.submitList(thoughts)
+        }
+
         // Recent trades
         viewModel.recentTrades.observe(viewLifecycleOwner) { trades ->
             tradesAdapter.submitList(trades)
@@ -119,8 +164,55 @@ class DashboardFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    // Thought Adapter
+    private class ThoughtAdapter : RecyclerView.Adapter<ThoughtAdapter.ThoughtViewHolder>() {
+        private var thoughts = emptyList<Thought>()
+        
+        fun submitList(newThoughts: List<Thought>) {
+            thoughts = newThoughts
+            notifyDataSetChanged()
+        }
+        
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ThoughtViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_thought, parent, false)
+            return ThoughtViewHolder(view)
+        }
+        
+        override fun onBindViewHolder(holder: ThoughtViewHolder, position: Int) {
+            holder.bind(thoughts[position])
+        }
+        
+        override fun getItemCount() = thoughts.size
+        
+        class ThoughtViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val timestamp: TextView = itemView.findViewById(R.id.thoughtTimestamp)
+            private val message: TextView = itemView.findViewById(R.id.thoughtMessage)
+            private val confidence: TextView = itemView.findViewById(R.id.thoughtConfidence)
+            
+            fun bind(thought: Thought) {
+                timestamp.text = thought.getFormattedTime()
+                message.text = thought.message
+                
+                // Red tint for HIBERNATE messages
+                if (thought.message.startsWith("HIBERNATE")) {
+                    itemView.setBackgroundColor(0x33FF5252) // 20% opacity accent color
+                } else {
+                    itemView.setBackgroundColor(0x00000000) // Transparent default
+                }
+                
+                if (thought.confidence != null) {
+                    confidence.text = "${thought.confidence}%"
+                    confidence.visibility = View.VISIBLE
+                } else {
+                    confidence.visibility = View.GONE
+                }
+            }
+        }
+    }
     
-    // RecyclerView Adapter
+    // Trades Adapter
     private class TradesAdapter : RecyclerView.Adapter<TradesAdapter.TradeViewHolder>() {
         private var trades = emptyList<Trade>()
         
