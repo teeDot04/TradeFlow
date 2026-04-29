@@ -14,7 +14,7 @@ import com.tradeflow.data.Trade
 import com.tradeflow.data.Thought
 import com.tradeflow.data.ThoughtManager
 import com.tradeflow.databinding.FragmentDashboardBinding
-import com.tradeflow.PythonBridge
+import com.tradeflow.AgentCore
 import com.tradeflow.utils.EncryptedPrefs
 import com.tradeflow.utils.Extensions.toCurrency
 import com.tradeflow.utils.Extensions.toFormattedDate
@@ -53,21 +53,21 @@ class DashboardFragment : Fragment() {
         // Set up Sovereign Control Switch
         val isSovereignActive = EncryptedPrefs.getKey(requireContext(), EncryptedPrefs.KEY_SOVEREIGN_CONTROL) == "true"
         binding.switchSovereignControl.isChecked = isSovereignActive
-        PythonBridge.toggleAgent(isSovereignActive) // Initial state push
+        AgentCore.toggleAgent(isSovereignActive) // Initial state push
         
         binding.switchSovereignControl.setOnCheckedChangeListener { _, isChecked ->
             EncryptedPrefs.saveKey(requireContext(), EncryptedPrefs.KEY_SOVEREIGN_CONTROL, isChecked.toString())
-            PythonBridge.toggleAgent(isChecked)
+            AgentCore.toggleAgent(isChecked)
         }
 
         // Set up PANIC Button
         binding.btnPanic.setOnClickListener {
             binding.switchSovereignControl.isChecked = false
-            PythonBridge.triggerPanic()
+            AgentCore.triggerPanic()
         }
 
         // Set up Heartbeat Listener
-        PythonBridge.heartbeatListener = {
+        AgentCore.heartbeatListener = {
             activity?.runOnUiThread {
                 binding.heartbeatLed.animate()
                     .alpha(1.0f)

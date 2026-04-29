@@ -11,10 +11,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Trade::class], version = 1, exportSchema = false)
+@Database(entities = [Trade::class, PositionJournal::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tradeDao(): TradeDao
+    abstract fun positionJournalDao(): PositionJournalDao
     
     companion object {
         @Volatile
@@ -27,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "tradeflow_database"
                 )
+                    .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

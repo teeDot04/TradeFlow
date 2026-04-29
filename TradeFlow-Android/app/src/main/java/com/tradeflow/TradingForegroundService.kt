@@ -37,14 +37,14 @@ class TradingForegroundService : Service() {
         val notification = createNotification("Sentinel: Monitoring BTC-USDT,SOL-USDT,ETH-USDT,LINK-USDT")
         startForeground(1, notification)
 
-        // Start the Python Agent
-        PythonBridge.startAgent(applicationContext)
+        // Start the Kotlin Agent
+        AgentCore.startAgent(applicationContext)
 
         return START_STICKY
     }
 
     override fun onDestroy() {
-        PythonBridge.stopAgent()
+        AgentCore.stopAgent()
         
         wakeLock?.let {
             if (it.isHeld) it.release()
