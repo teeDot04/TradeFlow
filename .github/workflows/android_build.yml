@@ -29,8 +29,15 @@ jobs:
         with:
           gradle-version: 8.9
 
+      - name: Generate Wrapper
+        run: gradle wrapper
+        working-directory: TradeFlow-Android
+
+      - name: Grant Gradle Permissions
+        run: chmod +x TradeFlow-Android/gradlew
+
       - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
         working-directory: TradeFlow-Android
 
       - name: Upload Debug APK Artifact
