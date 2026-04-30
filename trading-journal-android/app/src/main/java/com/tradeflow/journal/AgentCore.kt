@@ -229,7 +229,32 @@ object AgentCore {
         if (action == "BUY") {
             if (isSimulated) {
                 ThoughtManager.addThought("[SIMULATION] Executing dummy BUY for $instId @ $currentPrice", 100)
-                // Optionally insert a dummy trade into the database here if you want to see it in the list
+                
+                // Insert a dummy trade into the database for visual verification
+                val dummyTrade = com.tradeflow.journal.data.Trade(
+                    symbol = instId.replace("-", "/"),
+                    side = com.tradeflow.journal.data.TradeSide.LONG,
+                    entryPrice = currentPrice,
+                    exitPrice = currentPrice * 1.01, // Simulated 1% win
+                    quantity = 1000.0 / currentPrice,
+                    entryTime = System.currentTimeMillis(),
+                    exitTime = System.currentTimeMillis() + 60000,
+                    timestamp = System.currentTimeMillis(),
+                    strategy = "DeepSeek AI (Simulated)",
+                    notes = rationale,
+                    emotion = com.tradeflow.journal.data.Emotion.NEUTRAL,
+                    marketCondition = com.tradeflow.journal.data.MarketCondition.VOLATILE,
+                    setupQuality = confidence / 10,
+                    grossPnL = 10.0,
+                    totalFees = 1.0,
+                    netPnL = 9.0,
+                    returnPct = 0.9,
+                    ohlcvData = null
+                )
+                coroutineScope?.launch {
+                    db.tradeDao().insertTrade(dummyTrade)
+                    ThoughtManager.addThought("[SIMULATION] Dummy Trade logged to Journal.", 100)
+                }
             } else {
                 executeTrade(context, instId, currentPrice, okxKey, okxSecret, okxPass, positionDao)
             }
