@@ -59,6 +59,14 @@ object AgentCore {
         coroutineScope = null
         ThoughtManager.addThought("AgentCore stopped.", null)
     }
+
+    fun testDeepSeek(context: Context) {
+        coroutineScope?.launch {
+            ThoughtManager.addThought("AI Test: Manual diagnostic request sent...", 30)
+            thinkAndAct(context, "BTC-USDT-TEST", 50000.0)
+        }
+    }
+
     
     private fun startScanner(context: Context) {
         coroutineScope?.launch {
@@ -66,11 +74,19 @@ object AgentCore {
                 if (isSystemEnabled) {
                     heartbeatListener?.invoke()
                     
+                    val activePairs = priceBuffers.keys.joinToString(", ")
+                    if (System.currentTimeMillis() % 60000 < 3000) { // Every ~1 min
+                         ThoughtManager.addThought("Scanner Pulse: Monitoring $activePairs...", 20)
+                    }
+
                     priceBuffers.keys.forEach { instId ->
                         launch {
                             val price = fetchTicker(instId)
                             if (price > 0.0) {
                                 updateBufferAndCheck(context, instId, price)
+                            } else {
+                                // Log if fetching fails
+                                Log.e(TAG, "Failed to fetch price for $instId")
                             }
                         }
                     }
@@ -90,7 +106,11 @@ object AgentCore {
                     val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
                     val data = json.getAsJsonArray("data")
                     if (data != null && data.size() > 0) {
-                        data.get(0).asJsonObject.get("last").asDouble
+                        val price = data.get(0).asJsonObject.get("last").asDouble
+                        if (instId == "BTC-USDT" && System.currentTimeMillis() % 60000 < 3000) {
+                             ThoughtManager.addThought("BTC-USDT Pulse: $price", 10)
+                        }
+                        price
                     } else 0.0
                 } else 0.0
             }

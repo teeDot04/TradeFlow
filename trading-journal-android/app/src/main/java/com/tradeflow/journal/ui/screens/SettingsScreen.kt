@@ -246,6 +246,17 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             ) {
                                 Text("Save Credentials")
                             }
+
+                            OutlinedButton(
+                                onClick = {
+                                    com.tradeflow.journal.AgentCore.testDeepSeek(context)
+                                    Toast.makeText(context, "Testing DeepSeek Connectivity...", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Test AI Connectivity")
+                            }
                         }
                     }
                 }
