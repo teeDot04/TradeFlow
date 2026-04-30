@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tradeflow.journal.data.*
 
+import com.tradeflow.journal.ui.components.AvoidedTradesDialog
 import com.tradeflow.journal.ui.components.StatCard
 import com.tradeflow.journal.ui.components.TradeListItem
 import com.tradeflow.journal.viewmodel.TradeViewModel
@@ -23,8 +24,11 @@ import java.util.*
 @Composable
 fun DashboardScreen(viewModel: TradeViewModel) {
     val trades by viewModel.allTrades.collectAsState()
-    val stats = remember(trades) { viewModel.calculateStats(trades) }
+    val filteredTrades = remember(trades) { trades.filter { it.setupQuality > 0 } }
+    val avoidedTrades = remember(trades) { trades.filter { it.setupQuality == 0 } }
+    val stats = remember(filteredTrades) { viewModel.calculateStats(filteredTrades) }
     
+    var showAvoidedDialog by remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -135,10 +139,20 @@ fun DashboardScreen(viewModel: TradeViewModel) {
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             DetailStat("Largest Win", "$${String.format("%.2f", stats.largestWin)}")
                             DetailStat("Largest Loss", "$${String.format("%.2f", stats.largestLoss)}")
+                            
+                            TextButton(
+                                onClick = { showAvoidedDialog = true },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(Icons.Filled.VisibilityOff, null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Avoided (${avoidedTrades.size})", style = MaterialTheme.typography.labelMedium)
+                            }
                         }
                     }
                 }
@@ -198,13 +212,24 @@ fun DashboardScreen(viewModel: TradeViewModel) {
                 )
             }
 
-            items(trades.take(8)) { trade ->
+            items(filteredTrades.take(8)) { trade ->
                 TradeListItem(
                     trade = trade,
                     onClick = { viewModel.selectTrade(trade) }
                 )
             }
         }
+    }
+
+    if (showAvoidedDialog) {
+        AvoidedTradesDialog(
+            trades = avoidedTrades,
+            onDismiss = { showAvoidedDialog = false },
+            onTradeClick = { trade ->
+                showAvoidedDialog = false
+                viewModel.selectTrade(trade)
+            }
+        )
     }
 
 

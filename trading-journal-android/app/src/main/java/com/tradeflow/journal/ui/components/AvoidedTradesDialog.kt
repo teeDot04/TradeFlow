@@ -20,7 +20,8 @@ import java.util.*
 @Composable
 fun AvoidedTradesDialog(
     trades: List<Trade>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onTradeClick: (Trade) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -43,7 +44,7 @@ fun AvoidedTradesDialog(
                 )
                 
                 Text(
-                    "Trades the model flagged as 'WAIT' (Target 0). These typically preceded a price drop.",
+                    "Trades the model flagged as 'NO ACTION' (Quality 0). These were analyzed but skipped to preserve capital.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -68,7 +69,7 @@ fun AvoidedTradesDialog(
                         modifier = Modifier.weight(1f, fill = false)
                     ) {
                         items(trades) { trade ->
-                            AvoidedTradeItem(trade)
+                            AvoidedTradeItem(trade, onClick = { onTradeClick(trade) })
                         }
                     }
                 }
@@ -89,10 +90,11 @@ fun AvoidedTradesDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AvoidedTradeItem(trade: Trade) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+fun AvoidedTradeItem(trade: Trade, onClick: () -> Unit) {
+    val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
     
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
@@ -118,18 +120,13 @@ fun AvoidedTradeItem(trade: Trade) {
                 )
             }
             
-            // Show PnL as "Would have lost..." or similar context
-            // Since we stored 'pnl_pct' logic:
-            // If it was a Profitable Short (Price Drop), pnl is positive in our logic but negative for Spot.
-            // visual cue: "Avoided Drop"
-            
             Badge(
-                containerColor = MaterialTheme.colorScheme.errorContainer
+                containerColor = MaterialTheme.colorScheme.outline
             ) {
                 Text(
-                    "AVOID",
+                    "SKIPPED",
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )

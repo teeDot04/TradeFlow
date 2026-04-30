@@ -195,7 +195,7 @@ object AgentCore {
         {
             "model": "deepseek-v4-flash",
             "messages": [
-                {"role": "system", "content": "You are a sovereign trading assistant. Respond ONLY with a JSON object containing keys 'action' (string: 'BUY' or 'NO_ACTION'), 'rationale' (string), 'confidence' (integer 0-100)."},
+                {"role": "system", "content": "You are a sovereign trading assistant. Use these strategies:\n1. MEAN_REVERSION: Buying oversold dips in a range.\n2. TREND_FOLLOWING: Buying dips during an uptrend.\n3. MOMENTUM_BURST: Buying strength after a consolidation.\n\nRespond ONLY with a JSON object containing:\n'action' ('BUY' or 'NO_ACTION'),\n'strategy' (one of the 3 above),\n'rationale' (detailed explanation),\n'confidence' (0-100)."},
                 {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice.\n\nNEWS CONTEXT:\n$newsContext\n\n${if(instId.contains("TEST")) "PLEASE RESPOND WITH ACTION: BUY FOR SYSTEM TEST." else ""}"}
             ],
             "response_format": {"type": "json_object"}
@@ -211,6 +211,7 @@ object AgentCore {
             .build()
 
         var action = "NO_ACTION"
+        var strategy = "DIP_BUYING"
         var rationale = "No response"
         var confidence = 0
 
@@ -224,9 +225,10 @@ object AgentCore {
                         if (content != null) {
                             val result = gson.fromJson(content, JsonObject::class.java)
                             action = result.get("action").asString
+                            strategy = result.get("strategy")?.asString ?: "DIP_BUYING"
                             rationale = result.get("rationale").asString
                             confidence = result.get("confidence").asInt
-                            ThoughtManager.addThought("DeepSeek: $action ($confidence%) - $rationale", confidence)
+                            ThoughtManager.addThought("DeepSeek [$strategy]: $action ($confidence%) - $rationale", confidence)
                         }
                     }
                 }
@@ -249,8 +251,8 @@ object AgentCore {
                     entryTime = System.currentTimeMillis(),
                     exitTime = System.currentTimeMillis() + 60000,
                     timestamp = System.currentTimeMillis(),
-                    strategy = "DeepSeek AI (Simulated)",
-                    notes = rationale,
+                    strategy = "AI: $strategy",
+                    notes = "[$strategy] (Confidence: $confidence%)\n\n$rationale",
                     emotion = com.tradeflow.journal.data.Emotion.NEUTRAL,
                     marketCondition = com.tradeflow.journal.data.MarketCondition.VOLATILE,
                     setupQuality = confidence / 10,
@@ -266,6 +268,32 @@ object AgentCore {
                 }
             } else {
                 executeTrade(context, instId, currentPrice, okxKey, okxSecret, okxPass, positionDao)
+            }
+        } else if (action == "NO_ACTION") {
+            // Log as Avoided Trade (Quality 0)
+            val avoidedTrade = com.tradeflow.journal.data.Trade(
+                symbol = instId.replace("-", "/"),
+                side = com.tradeflow.journal.data.TradeSide.LONG, // Irrelevant for avoided
+                entryPrice = currentPrice,
+                exitPrice = currentPrice,
+                quantity = 0.0, // Indication of no trade
+                entryTime = System.currentTimeMillis(),
+                exitTime = System.currentTimeMillis(),
+                timestamp = System.currentTimeMillis(),
+                strategy = "AI: $strategy (Avoided)",
+                notes = "[$strategy] (Confidence: $confidence%)\n\n$rationale",
+                emotion = com.tradeflow.journal.data.Emotion.NEUTRAL,
+                marketCondition = com.tradeflow.journal.data.MarketCondition.RANGE_BOUND,
+                setupQuality = 0, // CRITICAL: Marks it as avoided
+                grossPnL = 0.0,
+                totalFees = 0.0,
+                netPnL = 0.0,
+                returnPct = 0.0,
+                ohlcvData = null
+            )
+            coroutineScope?.launch {
+                db.tradeDao().insertTrade(avoidedTrade)
+                ThoughtManager.addThought("[AVOIDED] Trade skipped (Quality 0) logged to journal.", 30)
             }
         }
     }
