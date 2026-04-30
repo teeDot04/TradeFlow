@@ -22,12 +22,15 @@ import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
+import com.tradeflow.journal.ui.components.AvoidedTradesDialog
 import com.tradeflow.journal.viewmodel.TradeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(viewModel: TradeViewModel) {
     val trades by viewModel.allTrades.collectAsState()
+    var showAvoidedDialog by remember { mutableStateOf(false) }
+    val avoidedTrades = remember(trades) { trades.filter { it.setupQuality == 0 } }
     
     // Calculate analytics data
     val cumulativePnL = remember(trades) {
@@ -277,11 +280,26 @@ fun AnalyticsScreen(viewModel: TradeViewModel) {
                         modifier = Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            "Risk & Consistency",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Risk & Consistency",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            if (avoidedTrades.isNotEmpty()) {
+                                TextButton(
+                                    onClick = { showAvoidedDialog = true },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("View Avoided Log", style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                        }
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -323,6 +341,17 @@ fun AnalyticsScreen(viewModel: TradeViewModel) {
                 }
             }
         }
+    }
+
+    if (showAvoidedDialog) {
+        AvoidedTradesDialog(
+            trades = avoidedTrades,
+            onDismiss = { showAvoidedDialog = false },
+            onTradeClick = { trade ->
+                showAvoidedDialog = false
+                viewModel.selectTrade(trade)
+            }
+        )
     }
 }
 
