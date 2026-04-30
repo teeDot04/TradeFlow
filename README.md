@@ -33,7 +33,7 @@ Every trade is a result of complex reasoning:
 
 - **Core Engine**: Kotlin (Coroutines/Flows), Android Foreground Services
 - **AI Brain**: DeepSeek-V4 Flash LLM
-- **News Engine**: CryptoPanic Pro API
+- **News Engine**: Yahoo finance API
 - **Exchange Interface**: OKX V5 API (Spot)
 - **Database**: Room (SQLite) with encrypted preferences
 
@@ -41,17 +41,11 @@ Every trade is a result of complex reasoning:
 
 ## ⚡ Setup Guide
 
-### 1. API Configuration
+### API Configuration
 Open the app and navigate to **Settings**. Enter your credentials for:
 - **OKX**: API Key, Secret, and Passphrase (ensure 'Trade' permission is enabled).
 - **DeepSeek**: API Key for market reasoning.
 - **CryptoPanic**: API Key for news sentiment injection.
-
-### 2. Modes of Operation
-- **Simulated Mode (Dry Run)**: Toggled ON by default. The agent will perform all logic and log "Dummy" trades to your journal without using real funds.
-- **Live Mode**: Toggle OFF 'Simulated Mode' to execute real trades on OKX.
-
----
 
 ## 🧪 The Logic & Math (Documentation)
 
@@ -60,7 +54,7 @@ The agent maintains a rolling buffer of the last 600 ticks (approx. 20 mins) for
 - **Peak Calculation**: `P = max(Buffer)`
 - **Drop Trigger**: If `(P - CurrentPrice) / P >= 0.03` (3% Drop from peak), the AI Analysis is triggered.
 
-### 2. Sentiment Injection (CryptoPanic)
+### 2. Sentiment Injection (Yahoo finance)
 The agent fetches the top 3 headlines.
 - **Sentiment Score**: Aggregated positive votes from the community.
 - **Context Construction**: `Prompt = [System Role] + [Current Price Data] + [Headlines]`.
