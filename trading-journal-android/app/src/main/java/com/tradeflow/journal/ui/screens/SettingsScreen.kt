@@ -30,12 +30,8 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
     val scope = rememberCoroutineScope()
     val trades by viewModel.allTrades.collectAsState()
     
-    val savedMakerFee by viewModel.makerFee.collectAsState()
-    val savedTakerFee by viewModel.takerFee.collectAsState()
     val gitUrl by viewModel.gitSyncUrl.collectAsState()
     
-    var makerFee by remember(savedMakerFee) { mutableStateOf(savedMakerFee.toString()) }
-    var takerFee by remember(savedTakerFee) { mutableStateOf(savedTakerFee.toString()) }
 
     
     var showPdfDialog by remember { mutableStateOf(false) }
@@ -155,22 +151,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             var okxPass by remember(savedOkxPass) { mutableStateOf(savedOkxPass ?: "") }
                             var dsKey by remember(savedDsKey) { mutableStateOf(savedDsKey ?: "") }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Simulated Mode (Dry Run)", style = MaterialTheme.typography.titleSmall)
-                                    Text("Simulates trades without calling OKX API. Works without balance.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Switch(
-                                    checked = isSimulated,
-                                    onCheckedChange = { viewModel.saveSimulatedMode(it) }
-                                )
-                            }
                             
-                            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                             OutlinedTextField(
                                 value = okxKey,
@@ -220,55 +201,11 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 Text("Save Credentials")
                             }
 
-                            OutlinedButton(
-                                onClick = {
-                                    com.tradeflow.journal.AgentCore.testDeepSeek(context)
-                                    Toast.makeText(context, "Testing DeepSeek Connectivity...", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Test AI Connectivity")
-                            }
                         }
                     }
                 }
             }
 
-            // --- TRADING PARAMETERS ---
-            item {
-                SettingsSection(title = "Trading Parameters") {
-                    SettingsCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = makerFee,
-                                onValueChange = { 
-                                    makerFee = it 
-                                    it.toDoubleOrNull()?.let { fee -> viewModel.saveMakerFee(fee) }
-                                },
-                                label = { Text("Maker Fee (%)") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            OutlinedTextField(
-                                value = takerFee,
-                                onValueChange = { 
-                                    takerFee = it 
-                                    it.toDoubleOrNull()?.let { fee -> viewModel.saveTakerFee(fee) }
-                                },
-                                label = { Text("Taker Fee (%)") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                        }
-                    }
-                }
-            }
 
             // --- DATA MANAGEMENT ---
             item {

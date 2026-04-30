@@ -306,6 +306,10 @@ object AgentCore {
         ThoughtManager.addThought("Prepared Order: UUID=$uuid", 90)
         
         val balance = withContext(Dispatchers.IO) { fetchAccountBalance(okxKey, okxSecret, okxPass) }
+        val fees = withContext(Dispatchers.IO) { fetchTradeFees(okxKey, okxSecret, okxPass) }
+        val makerFee = fees.first
+        val takerFee = fees.second
+        
         val tradeAmount = balance * 0.90 * 0.50
         val size = tradeAmount / currentPrice
         
@@ -347,6 +351,33 @@ object AgentCore {
                 } else 0.0
             }
         } catch (e: Exception) { 0.0 }
+    }
+
+    private fun fetchTradeFees(key: String, secret: String, passphrase: String): Pair<Double, Double> {
+        val timestamp = System.currentTimeMillis().toString()
+        val method = "GET"
+        val path = "/api/v5/account/trade-fee?instType=SPOT"
+        val signature = OkxSigner.signRequest(timestamp, method, path, "", secret)
+        
+        val request = Request.Builder()
+            .url("https://www.okx.com$path")
+            .addHeader("OK-ACCESS-KEY", key)
+            .addHeader("OK-ACCESS-SIGN", signature)
+            .addHeader("OK-ACCESS-TIMESTAMP", timestamp)
+            .addHeader("OK-ACCESS-PASSPHRASE", passphrase)
+            .build()
+            
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
+                    val data = json.getAsJsonArray("data").get(0).asJsonObject
+                    val maker = data.get("maker").asDouble
+                    val taker = data.get("taker").asDouble
+                    Pair(maker, taker)
+                } else Pair(0.001, 0.001) // Default 0.1%
+            }
+        } catch (e: Exception) { Pair(0.001, 0.001) }
     }
 
     private fun placeOrder(key: String, secret: String, passphrase: String, instId: String, side: String, sz: Double, clOrdId: String): Boolean {
