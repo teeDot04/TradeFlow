@@ -110,8 +110,8 @@ object AgentCore {
                     val data = json.getAsJsonArray("data")
                     if (data != null && data.size() > 0) {
                         val price = data.get(0).asJsonObject.get("last").asDouble
-                        if (instId == "BTC-USDT" && System.currentTimeMillis() % 60000 < 3000) {
-                             ThoughtManager.addThought("BTC-USDT Pulse: $price", 10)
+                        if (System.currentTimeMillis() % 60000 < 3000) {
+                             ThoughtManager.addThought("$instId Pulse: $price", 10)
                         }
                         price
                     } else 0.0
@@ -172,7 +172,7 @@ object AgentCore {
         val deepseekKey = prefs.deepSeekApiKey.first() ?: ""
         val cryptopanicKey = prefs.cryptoPanicApiKey.first() ?: ""
         
-        val isSimulated = prefs.simulatedMode.first()
+        val isSimulated = false // Forced live mode
         
         if (!isSimulated && (okxKey.isEmpty() || okxSecret.isEmpty())) {
             ThoughtManager.addThought("Missing credentials in settings.", null)
