@@ -17,6 +17,10 @@ class UserPreferencesRepository(private val context: Context) {
     private val TAKER_FEE_KEY = doublePreferencesKey("taker_fee")
     private val GIT_SYNC_URL_KEY = androidx.datastore.preferences.core.stringPreferencesKey("git_sync_url")
     private val GIT_TOKEN_KEY = androidx.datastore.preferences.core.stringPreferencesKey("git_token")
+    private val OKX_API_KEY = androidx.datastore.preferences.core.stringPreferencesKey("okx_api_key")
+    private val OKX_API_SECRET = androidx.datastore.preferences.core.stringPreferencesKey("okx_api_secret")
+    private val OKX_API_PASSPHRASE = androidx.datastore.preferences.core.stringPreferencesKey("okx_api_passphrase")
+    private val DEEPSEEK_API_KEY = androidx.datastore.preferences.core.stringPreferencesKey("deepseek_api_key")
     
     val makerFee: Flow<Double> = context.dataStore.data.map { preferences ->
         preferences[MAKER_FEE_KEY] ?: 0.1
@@ -32,6 +36,11 @@ class UserPreferencesRepository(private val context: Context) {
     val gitToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[GIT_TOKEN_KEY]
     }
+
+    val okxApiKey: Flow<String?> = context.dataStore.data.map { preferences -> preferences[OKX_API_KEY] }
+    val okxApiSecret: Flow<String?> = context.dataStore.data.map { preferences -> preferences[OKX_API_SECRET] }
+    val okxApiPassphrase: Flow<String?> = context.dataStore.data.map { preferences -> preferences[OKX_API_PASSPHRASE] }
+    val deepSeekApiKey: Flow<String?> = context.dataStore.data.map { preferences -> preferences[DEEPSEEK_API_KEY] }
     
     suspend fun saveMakerFee(fee: Double) {
         context.dataStore.edit { preferences ->
@@ -48,6 +57,20 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun saveGitToken(token: String) {
         context.dataStore.edit { preferences ->
             preferences[GIT_TOKEN_KEY] = token
+        }
+    }
+
+    suspend fun saveOkxCredentials(key: String, secret: String, passphrase: String) {
+        context.dataStore.edit { preferences ->
+            preferences[OKX_API_KEY] = key
+            preferences[OKX_API_SECRET] = secret
+            preferences[OKX_API_PASSPHRASE] = passphrase
+        }
+    }
+
+    suspend fun saveDeepSeekKey(key: String) {
+        context.dataStore.edit { preferences ->
+            preferences[DEEPSEEK_API_KEY] = key
         }
     }
     

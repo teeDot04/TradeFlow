@@ -166,6 +166,73 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                 }
             }
 
+            // --- SOVEREIGN AGENT API ---
+            item {
+                SettingsSection(title = "Sovereign Agent API") {
+                    SettingsCard {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            val savedOkxKey by viewModel.okxApiKey.collectAsState()
+                            val savedOkxSecret by viewModel.okxApiSecret.collectAsState()
+                            val savedOkxPass by viewModel.okxApiPassphrase.collectAsState()
+                            val savedDsKey by viewModel.deepSeekApiKey.collectAsState()
+
+                            var okxKey by remember(savedOkxKey) { mutableStateOf(savedOkxKey ?: "") }
+                            var okxSecret by remember(savedOkxSecret) { mutableStateOf(savedOkxSecret ?: "") }
+                            var okxPass by remember(savedOkxPass) { mutableStateOf(savedOkxPass ?: "") }
+                            var dsKey by remember(savedDsKey) { mutableStateOf(savedDsKey ?: "") }
+
+                            OutlinedTextField(
+                                value = okxKey,
+                                onValueChange = { okxKey = it },
+                                label = { Text("OKX API Key") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            OutlinedTextField(
+                                value = okxSecret,
+                                onValueChange = { okxSecret = it },
+                                label = { Text("OKX API Secret") },
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            OutlinedTextField(
+                                value = okxPass,
+                                onValueChange = { okxPass = it },
+                                label = { Text("OKX Passphrase") },
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            OutlinedTextField(
+                                value = dsKey,
+                                onValueChange = { dsKey = it },
+                                label = { Text("DeepSeek API Key") },
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            Button(
+                                onClick = {
+                                    viewModel.saveOkxCredentials(okxKey, okxSecret, okxPass)
+                                    viewModel.saveDeepSeekKey(dsKey)
+                                    Toast.makeText(context, "API Credentials Saved", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Save Credentials")
+                            }
+                        }
+                    }
+                }
+            }
+
             // --- TRADING PARAMETERS ---
             item {
                 SettingsSection(title = "Trading Parameters") {

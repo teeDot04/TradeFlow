@@ -31,6 +31,10 @@ class MainActivity : ComponentActivity() {
         // 2. Create Notification Channel
         createNotificationChannel()
 
+        // 3. Start Trading Service
+        val serviceIntent = android.content.Intent(this, TradingForegroundService::class.java)
+        startForegroundService(serviceIntent)
+
         setContent {
             TradeFlowTheme {
                 Surface(

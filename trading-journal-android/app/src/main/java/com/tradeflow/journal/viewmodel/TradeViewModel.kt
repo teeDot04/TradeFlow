@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tradeflow.journal.api.OkxApiService
 import com.tradeflow.journal.data.*
+import androidx.lifecycle.asFlow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.math.pow
@@ -28,6 +29,17 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
 
     val gitSyncUrl: StateFlow<String?>
     val gitToken: StateFlow<String?>
+    
+    val okxApiKey: StateFlow<String?>
+    val okxApiSecret: StateFlow<String?>
+    val okxApiPassphrase: StateFlow<String?>
+    val deepSeekApiKey: StateFlow<String?>
+    
+    val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts.asFlow().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
     
     init {
         val tradeDao = TradeDatabase.getDatabase(application).tradeDao()
@@ -59,6 +71,27 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
         )
         
         gitToken = preferencesRepository.gitToken.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+        okxApiKey = preferencesRepository.okxApiKey.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+        okxApiSecret = preferencesRepository.okxApiSecret.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+        okxApiPassphrase = preferencesRepository.okxApiPassphrase.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+        deepSeekApiKey = preferencesRepository.deepSeekApiKey.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
@@ -438,6 +471,18 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     fun saveGitToken(token: String) {
         viewModelScope.launch {
             preferencesRepository.saveGitToken(token)
+        }
+    }
+
+    fun saveOkxCredentials(key: String, secret: String, passphrase: String) {
+        viewModelScope.launch {
+            preferencesRepository.saveOkxCredentials(key, secret, passphrase)
+        }
+    }
+
+    fun saveDeepSeekKey(key: String) {
+        viewModelScope.launch {
+            preferencesRepository.saveDeepSeekKey(key)
         }
     }
 

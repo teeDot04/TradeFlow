@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [Trade::class], version = 2, exportSchema = false)
+@Database(entities = [Trade::class, PositionJournal::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class TradeDatabase : RoomDatabase() {
     abstract fun tradeDao(): TradeDao
+    abstract fun positionJournalDao(): PositionJournalDao
 
     companion object {
         @Volatile
