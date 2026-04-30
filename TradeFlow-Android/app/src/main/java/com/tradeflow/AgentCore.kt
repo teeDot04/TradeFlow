@@ -12,6 +12,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -91,7 +92,7 @@ object AgentCore {
         return try {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val json = gson.fromJson(response.body()?.string(), JsonObject::class.java)
+                    val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
                     val data = json.getAsJsonArray("data")
                     if (data != null && data.size() > 0) {
                         data.get(0).asJsonObject.get("last").asDouble
@@ -171,7 +172,7 @@ object AgentCore {
         """.trimIndent()
         
         val mediaType = "application/json".toMediaTypeOrNull()
-        val reqBody = RequestBody.create(deepSeekRequest, mediaType)
+        val reqBody = deepSeekRequest.toRequestBody(mediaType)
         val dsRequest = Request.Builder()
             .url("https://api.deepseek.com/chat/completions")
             .addHeader("Authorization", "Bearer $deepseekKey")
@@ -248,7 +249,7 @@ object AgentCore {
         return try {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val json = gson.fromJson(response.body()?.string(), JsonObject::class.java)
+                    val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
                     val data = json.getAsJsonArray("data").get(0).asJsonObject
                     data.get("availEq").asDouble
                 } else 0.0
@@ -273,7 +274,7 @@ object AgentCore {
         val signature = OkxSigner.signRequest(timestamp, method, path, bodyStr, secret)
         
         val mediaType = "application/json".toMediaTypeOrNull()
-        val reqBody = RequestBody.create(bodyStr, mediaType)
+        val reqBody = bodyStr.toRequestBody(mediaType)
         val request = Request.Builder()
             .url("https://www.okx.com$path")
             .addHeader("OK-ACCESS-KEY", key)
@@ -308,7 +309,7 @@ object AgentCore {
         val signature = OkxSigner.signRequest(timestamp, method, path, bodyStr, secret)
         
         val mediaType = "application/json".toMediaTypeOrNull()
-        val reqBody = RequestBody.create(bodyStr, mediaType)
+        val reqBody = bodyStr.toRequestBody(mediaType)
         val request = Request.Builder()
             .url("https://www.okx.com$path")
             .addHeader("OK-ACCESS-KEY", key)

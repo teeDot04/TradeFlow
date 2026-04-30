@@ -113,9 +113,8 @@ class DashboardFragment : Fragment() {
         
         // Total P&L
         viewModel.totalPnl.observe(viewLifecycleOwner) { pnl ->
-            binding.statPnl.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.total_pnl)
-            binding.statPnl.findViewById<TextView>(R.id.statValue).apply {
+            binding.statPnl.statLabel.text = getString(R.string.total_pnl)
+            binding.statPnl.statValue.apply {
                 text = pnl.toCurrency()
                 setTextColor(pnl.toPnlColor())
             }
@@ -123,25 +122,20 @@ class DashboardFragment : Fragment() {
         
         // Win Rate
         viewModel.winRate.observe(viewLifecycleOwner) { rate ->
-            binding.statWinRate.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.win_rate)
-            binding.statWinRate.findViewById<TextView>(R.id.statValue).text = 
-                rate.toPercentage()
+            binding.statWinRate.statLabel.text = getString(R.string.win_rate)
+            binding.statWinRate.statValue.text = rate.toPercentage()
         }
         
         // Profit Factor
         viewModel.profitFactor.observe(viewLifecycleOwner) { factor ->
-            binding.statProfitFactor.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.profit_factor)
-            binding.statProfitFactor.findViewById<TextView>(R.id.statValue).text = 
-                String.format("%.2f", factor)
+            binding.statProfitFactor.statLabel.text = getString(R.string.profit_factor)
+            binding.statProfitFactor.statValue.text = String.format("%.2f", factor)
         }
         
         // Average Return
         viewModel.avgReturn.observe(viewLifecycleOwner) { avg ->
-            binding.statAvgReturn.findViewById<TextView>(R.id.statLabel).text = 
-                getString(R.string.avg_return)
-            binding.statAvgReturn.findViewById<TextView>(R.id.statValue).apply {
+            binding.statAvgReturn.statLabel.text = getString(R.string.avg_return)
+            binding.statAvgReturn.statValue.apply {
                 text = avg.toPercentage()
                 setTextColor(avg.toPnlColor())
             }
