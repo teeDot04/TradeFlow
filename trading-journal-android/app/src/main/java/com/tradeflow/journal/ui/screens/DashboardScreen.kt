@@ -179,7 +179,7 @@ fun DashboardScreen(viewModel: TradeViewModel) {
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            thoughts.take(5).forEach { thought ->
+                            thoughts.take(3).forEach { thought ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -212,7 +212,7 @@ fun DashboardScreen(viewModel: TradeViewModel) {
                 )
             }
 
-            items(filteredTrades.take(8)) { trade ->
+            items(filteredTrades.take(1)) { trade ->
                 TradeListItem(
                     trade = trade,
                     onClick = { viewModel.selectTrade(trade) }
