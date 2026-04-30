@@ -187,7 +187,7 @@ object AgentCore {
             withContext(Dispatchers.IO) {
                 client.newCall(dsRequest).execute().use { response ->
                     if (response.isSuccessful) {
-                        val dsRes = gson.fromJson(response.body()?.string(), JsonObject::class.java)
+                        val dsRes = gson.fromJson(response.body?.string(), JsonObject::class.java)
                         val choices = dsRes.getAsJsonArray("choices")
                         val content = choices?.get(0)?.asJsonObject?.getAsJsonObject("message")?.get("content")?.asString
                         if (content != null) {

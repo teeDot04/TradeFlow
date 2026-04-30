@@ -16,10 +16,10 @@ import com.tradeflow.data.ThoughtManager
 import com.tradeflow.databinding.FragmentDashboardBinding
 import com.tradeflow.AgentCore
 import com.tradeflow.utils.EncryptedPrefs
-import com.tradeflow.utils.Extensions.toCurrency
-import com.tradeflow.utils.Extensions.toFormattedDate
-import com.tradeflow.utils.Extensions.toPnlColor
-import com.tradeflow.utils.Extensions.toPercentage
+import com.tradeflow.utils.toCurrency
+import com.tradeflow.utils.toFormattedDate
+import com.tradeflow.utils.toPnlColor
+import com.tradeflow.utils.toPercentage
 import com.tradeflow.utils.ThemeManager
 
 class DashboardFragment : Fragment() {
