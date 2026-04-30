@@ -6,9 +6,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tradeflow.journal.data.TradeDatabase
 import com.tradeflow.journal.data.PositionJournal
+import com.tradeflow.journal.data.PositionJournalDao
 import com.tradeflow.journal.data.ThoughtManager
 import com.tradeflow.journal.data.UserPreferencesRepository
-import com.tradeflow.journal.data.dataStore
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -204,7 +204,7 @@ object AgentCore {
         }
     }
 
-    private suspend fun executeTrade(context: Context, instId: String, currentPrice: Double, okxKey: String, okxSecret: String, okxPass: String, positionDao: com.tradeflow.journal.data.PositionJournalDao) {
+    private suspend fun executeTrade(context: Context, instId: String, currentPrice: Double, okxKey: String, okxSecret: String, okxPass: String, positionDao: PositionJournalDao) {
         val uuid = UUID.randomUUID().toString()
         val position = PositionJournal(uuid = uuid, instId = instId, status = "PENDING", action = "BUY")
         positionDao.insert(position)

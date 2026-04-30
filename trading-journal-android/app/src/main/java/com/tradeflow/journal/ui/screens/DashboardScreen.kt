@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tradeflow.journal.data.Trade
+import com.tradeflow.journal.data.*
 
 import com.tradeflow.journal.ui.components.StatCard
 import com.tradeflow.journal.ui.components.TradeListItem
