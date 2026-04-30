@@ -1,6 +1,8 @@
 package com.tradeflow.journal.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tradeflow.journal.api.OkxApiService
@@ -35,7 +37,8 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     val deepSeekApiKey: StateFlow<String?>
     val cryptoPanicApiKey: StateFlow<String?>
     val simulatedMode: StateFlow<Boolean>
-    val isAgentActive = mutableStateOf(com.tradeflow.journal.AgentCore.isSystemEnabled)
+    private val _isAgentActive = mutableStateOf(com.tradeflow.journal.AgentCore.isSystemEnabled)
+    val isAgentActive: State<Boolean> = _isAgentActive
     
     val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts
     
@@ -510,7 +513,7 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleAgent(active: Boolean) {
         com.tradeflow.journal.AgentCore.toggleAgent(active)
-        isAgentActive.value = active
+        _isAgentActive.value = active
     }
 
     private fun showTradeNotification(count: Int) {
