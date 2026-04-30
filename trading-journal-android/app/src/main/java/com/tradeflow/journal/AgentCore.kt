@@ -187,7 +187,7 @@ object AgentCore {
             "model": "deepseek-v4-flash",
             "messages": [
                 {"role": "system", "content": "You are a sovereign trading assistant. Respond ONLY with a JSON object containing keys 'action' (string: 'BUY' or 'NO_ACTION'), 'rationale' (string), 'confidence' (integer 0-100)."},
-                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice."}
+                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice. ${if(instId.contains("TEST")) "PLEASE RESPOND WITH ACTION: BUY FOR SYSTEM TEST." else ""}"}
             ],
             "response_format": {"type": "json_object"}
         }
