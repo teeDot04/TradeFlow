@@ -185,6 +185,7 @@ object AgentCore {
         }
 
         // Fetch News (Using Yahoo Finance RSS - Free & No Key Required)
+        var newsContext = "No recent news available."
         ThoughtManager.addThought("Fetching latest news for $instId...", 40)
         val coin = instId.split("-")[0]
         newsContext = fetchNews(coin)
