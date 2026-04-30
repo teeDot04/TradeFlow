@@ -422,7 +422,12 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
          val avoidedTrades = trades.filter { it.setupQuality == 0 }
          AvoidedTradesDialog(
              trades = avoidedTrades,
-             onDismiss = { showAvoidedDialog = false }
+             onDismiss = { showAvoidedDialog = false },
+             onTradeClick = { trade ->
+                 showAvoidedDialog = false
+                 viewModel.selectTrade(trade)
+                 navController.navigate(com.tradeflow.journal.ui.navigation.Screen.Dashboard.route)
+             }
          )
     }
 }
