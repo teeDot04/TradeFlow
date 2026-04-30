@@ -17,6 +17,9 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
+import java.io.StringReader
 
 object AgentCore {
     private const val TAG = "AgentCore"
@@ -63,7 +66,7 @@ object AgentCore {
     fun testDeepSeek(context: Context) {
         coroutineScope?.launch {
             ThoughtManager.addThought("AI Test: Manual diagnostic request sent...", 30)
-            thinkAndAct(context, "BTC-USDT-TEST", 50000.0)
+            thinkAndAct(context, "BTC-USDT", 50000.0)
         }
     }
 
@@ -181,13 +184,10 @@ object AgentCore {
             return
         }
 
-        // Fetch News if key is available
-        var newsContext = "No recent news available."
-        if (cryptopanicKey.isNotEmpty()) {
-            ThoughtManager.addThought("Fetching latest news for $instId...", 40)
-            val coin = instId.split("-")[0]
-            newsContext = fetchNews(cryptopanicKey, coin)
-        }
+        // Fetch News (Using Yahoo Finance RSS - Free & No Key Required)
+        ThoughtManager.addThought("Fetching latest news for $instId...", 40)
+        val coin = instId.split("-")[0]
+        newsContext = fetchNews(coin)
 
         ThoughtManager.addThought("Consulting DeepSeek for $instId...", 50)
         
@@ -196,7 +196,7 @@ object AgentCore {
             "model": "deepseek-v4-flash",
             "messages": [
                 {"role": "system", "content": "You are a sovereign trading assistant. Use these strategies:\n1. MEAN_REVERSION: Buying oversold dips in a range.\n2. TREND_FOLLOWING: Buying dips during an uptrend.\n3. MOMENTUM_BURST: Buying strength after a consolidation.\n\nRespond ONLY with a JSON object containing:\n'action' ('BUY' or 'NO_ACTION'),\n'strategy' (one of the 3 above),\n'rationale' (detailed explanation),\n'confidence' (0-100)."},
-                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice.\n\nNEWS CONTEXT:\n$newsContext\n\n${if(instId.contains("TEST")) "PLEASE RESPOND WITH ACTION: BUY FOR SYSTEM TEST." else ""}"}
+                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice.\n\nNEWS CONTEXT:\n$newsContext"}
             ],
             "response_format": {"type": "json_object"}
         }
@@ -315,8 +315,11 @@ object AgentCore {
         
         val orderSuccess = withContext(Dispatchers.IO) { placeOrder(okxKey, okxSecret, okxPass, instId, "buy", size, uuid) }
         if (orderSuccess) {
-            ThoughtManager.addThought("Atomic Buy Complete for $instId. Executing exchange Stop Loss...", 100)
-            withContext(Dispatchers.IO) { placeStopLoss(okxKey, okxSecret, okxPass, instId, "sell", size, currentPrice * 0.975) }
+            ThoughtManager.addThought("Atomic Buy Complete for $instId. Setting Stop Loss (-2.5%) and Take Profit (+5%)...", 100)
+            withContext(Dispatchers.IO) { 
+                placeStopLoss(okxKey, okxSecret, okxPass, instId, "sell", size, currentPrice * 0.975)
+                placeTakeProfit(okxKey, okxSecret, okxPass, instId, "sell", size, currentPrice * 1.05)
+            }
         }
     }
 
@@ -412,27 +415,81 @@ object AgentCore {
         } catch (e: Exception) { }
     }
 
-    private fun fetchNews(apiKey: String, coin: String): String {
-        val url = "https://cryptopanic.com/api/v1/posts/?auth_token=$apiKey&currencies=$coin&filter=important&kind=news"
+    private fun placeTakeProfit(key: String, secret: String, passphrase: String, instId: String, side: String, sz: Double, tpTriggerPrice: Double) {
+        val timestamp = System.currentTimeMillis().toString()
+        val method = "POST"
+        val path = "/api/v5/trade/order-algo"
+        
+        val bodyObj = JsonObject().apply {
+            addProperty("instId", instId)
+            addProperty("tdMode", "cash")
+            addProperty("side", side)
+            addProperty("ordType", "conditional")
+            addProperty("sz", sz.toString())
+            addProperty("tpTriggerPx", tpTriggerPrice.toString())
+            addProperty("tpOrdPx", "-1") // Market TP
+        }
+        val bodyStr = bodyObj.toString()
+        val signature = OkxSigner.signRequest(timestamp, method, path, bodyStr, secret)
+        
+        val mediaType = "application/json".toMediaTypeOrNull()
+        val reqBody = bodyStr.toRequestBody(mediaType)
+        val request = Request.Builder()
+            .url("https://www.okx.com$path")
+            .addHeader("OK-ACCESS-KEY", key)
+            .addHeader("OK-ACCESS-SIGN", signature)
+            .addHeader("OK-ACCESS-TIMESTAMP", timestamp)
+            .addHeader("OK-ACCESS-PASSPHRASE", passphrase)
+            .post(reqBody)
+            .build()
+            
+        try {
+            client.newCall(request).execute().close()
+        } catch (e: Exception) { }
+    }
+
+    private fun fetchNews(coin: String): String {
+        // Yahoo Finance RSS (No key required)
+        val url = "https://finance.yahoo.com/rss/headline?s=$coin-USD"
         val request = Request.Builder().url(url).build()
         
         return try {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
-                    val results = json.getAsJsonArray("results")
-                    if (results != null && results.size() > 0) {
-                        val headlines = mutableListOf<String>()
-                        for (i in 0 until minOf(results.size(), 3)) {
-                            val post = results.get(i).asJsonObject
-                            val title = post.get("title").asString
-                            val sentiment = post.get("votes")?.asJsonObject?.get("positive")?.asInt ?: 0
-                            headlines.add("- $title (Positive votes: $sentiment)")
-                        }
-                        headlines.joinToString("\n")
-                    } else "No major news found for $coin."
+                    val xml = response.body?.string() ?: ""
+                    parseRSS(xml)
                 } else "Failed to fetch news."
             }
         } catch (e: Exception) { "Error fetching news: ${e.message}" }
+    }
+
+    private fun parseRSS(xml: String): String {
+        return try {
+            val factory = XmlPullParserFactory.newInstance()
+            val parser = factory.newPullParser()
+            parser.setInput(StringReader(xml))
+            
+            val headlines = mutableListOf<String>()
+            var eventType = parser.eventType
+            var currentTitle = ""
+            var itemCount = 0
+            
+            while (eventType != XmlPullParser.END_DOCUMENT && itemCount < 3) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    if (parser.name == "title") {
+                        currentTitle = parser.nextText()
+                        // Skip the main feed title
+                        if (!currentTitle.contains("Yahoo Finance", ignoreCase = true)) {
+                            headlines.add("- $currentTitle")
+                            itemCount++
+                        }
+                    }
+                }
+                eventType = parser.next()
+            }
+            if (headlines.isEmpty()) "No major news found." else headlines.joinToString("\n")
+        } catch (e: Exception) {
+            "Error parsing news RSS."
+        }
     }
 }

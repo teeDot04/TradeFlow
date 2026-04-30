@@ -148,14 +148,12 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             val savedOkxSecret by viewModel.okxApiSecret.collectAsState()
                             val savedOkxPass by viewModel.okxApiPassphrase.collectAsState()
                             val savedDsKey by viewModel.deepSeekApiKey.collectAsState()
-                            val savedCpKey by viewModel.cryptoPanicApiKey.collectAsState()
                             val isSimulated by viewModel.simulatedMode.collectAsState()
 
                             var okxKey by remember(savedOkxKey) { mutableStateOf(savedOkxKey ?: "") }
                             var okxSecret by remember(savedOkxSecret) { mutableStateOf(savedOkxSecret ?: "") }
                             var okxPass by remember(savedOkxPass) { mutableStateOf(savedOkxPass ?: "") }
                             var dsKey by remember(savedDsKey) { mutableStateOf(savedDsKey ?: "") }
-                            var cpKey by remember(savedCpKey) { mutableStateOf(savedCpKey ?: "") }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -209,21 +207,11 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            OutlinedTextField(
-                                value = cpKey,
-                                onValueChange = { cpKey = it },
-                                label = { Text("CryptoPanic API Key (Optional News)") },
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
 
                             Button(
                                 onClick = {
                                     viewModel.saveOkxCredentials(okxKey, okxSecret, okxPass)
                                     viewModel.saveDeepSeekKey(dsKey)
-                                    viewModel.saveCryptoPanicKey(cpKey)
                                     Toast.makeText(context, "API Credentials Saved", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.fillMaxWidth(),
