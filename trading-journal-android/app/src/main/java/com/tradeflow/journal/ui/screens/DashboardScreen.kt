@@ -51,6 +51,8 @@ fun DashboardScreen(viewModel: TradeViewModel) {
         },
 
     ) { padding ->
+        val thoughts by viewModel.thoughts.collectAsState()
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -143,7 +145,6 @@ fun DashboardScreen(viewModel: TradeViewModel) {
             }
 
             // Agent Analysis
-            val thoughts by viewModel.thoughts.collectAsState()
             if (thoughts.isNotEmpty()) {
                 item {
                     Text(

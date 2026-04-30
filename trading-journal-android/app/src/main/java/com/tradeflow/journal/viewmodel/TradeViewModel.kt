@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tradeflow.journal.api.OkxApiService
 import com.tradeflow.journal.data.*
-import androidx.lifecycle.asFlow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.math.pow
@@ -35,11 +34,7 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     val okxApiPassphrase: StateFlow<String?>
     val deepSeekApiKey: StateFlow<String?>
     
-    val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts.asFlow().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts
     
     init {
         val tradeDao = TradeDatabase.getDatabase(application).tradeDao()
