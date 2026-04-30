@@ -148,8 +148,15 @@ object AgentCore {
         val okxPass = prefs.okxApiPassphrase.first() ?: ""
         val deepseekKey = prefs.deepSeekApiKey.first() ?: ""
         
-        if (okxKey.isEmpty() || okxSecret.isEmpty() || deepseekKey.isEmpty()) {
+        val isSimulated = prefs.simulatedMode.first()
+        
+        if (!isSimulated && (okxKey.isEmpty() || okxSecret.isEmpty())) {
             ThoughtManager.addThought("Missing credentials in settings.", null)
+            return
+        }
+
+        if (deepseekKey.isEmpty()) {
+            ThoughtManager.addThought("Missing DeepSeek key.", null)
             return
         }
 
@@ -200,7 +207,12 @@ object AgentCore {
         }
 
         if (action == "BUY") {
-            executeTrade(context, instId, currentPrice, okxKey, okxSecret, okxPass, positionDao)
+            if (isSimulated) {
+                ThoughtManager.addThought("[SIMULATION] Executing dummy BUY for $instId @ $currentPrice", 100)
+                // Optionally insert a dummy trade into the database here if you want to see it in the list
+            } else {
+                executeTrade(context, instId, currentPrice, okxKey, okxSecret, okxPass, positionDao)
+            }
         }
     }
 

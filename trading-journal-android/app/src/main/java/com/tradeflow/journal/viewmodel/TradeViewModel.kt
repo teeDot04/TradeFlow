@@ -33,6 +33,7 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     val okxApiSecret: StateFlow<String?>
     val okxApiPassphrase: StateFlow<String?>
     val deepSeekApiKey: StateFlow<String?>
+    val simulatedMode: StateFlow<Boolean>
     
     val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts
     
@@ -90,6 +91,12 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
+        )
+
+        simulatedMode = preferencesRepository.simulatedMode.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
         )
         
         // Auto-Sync Git Journal on App Start
@@ -478,6 +485,12 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     fun saveDeepSeekKey(key: String) {
         viewModelScope.launch {
             preferencesRepository.saveDeepSeekKey(key)
+        }
+    }
+
+    fun saveSimulatedMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.saveSimulatedMode(enabled)
         }
     }
 

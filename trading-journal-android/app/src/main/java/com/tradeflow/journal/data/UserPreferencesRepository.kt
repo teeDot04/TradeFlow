@@ -21,6 +21,7 @@ class UserPreferencesRepository(private val context: Context) {
     private val OKX_API_SECRET = androidx.datastore.preferences.core.stringPreferencesKey("okx_api_secret")
     private val OKX_API_PASSPHRASE = androidx.datastore.preferences.core.stringPreferencesKey("okx_api_passphrase")
     private val DEEPSEEK_API_KEY = androidx.datastore.preferences.core.stringPreferencesKey("deepseek_api_key")
+    private val SIMULATED_MODE_KEY = androidx.datastore.preferences.core.booleanPreferencesKey("simulated_mode")
     
     val makerFee: Flow<Double> = context.dataStore.data.map { preferences ->
         preferences[MAKER_FEE_KEY] ?: 0.1
@@ -41,6 +42,7 @@ class UserPreferencesRepository(private val context: Context) {
     val okxApiSecret: Flow<String?> = context.dataStore.data.map { preferences -> preferences[OKX_API_SECRET] }
     val okxApiPassphrase: Flow<String?> = context.dataStore.data.map { preferences -> preferences[OKX_API_PASSPHRASE] }
     val deepSeekApiKey: Flow<String?> = context.dataStore.data.map { preferences -> preferences[DEEPSEEK_API_KEY] }
+    val simulatedMode: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[SIMULATED_MODE_KEY] ?: true } // Default to true for safety
     
     suspend fun saveMakerFee(fee: Double) {
         context.dataStore.edit { preferences ->
@@ -71,6 +73,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun saveDeepSeekKey(key: String) {
         context.dataStore.edit { preferences ->
             preferences[DEEPSEEK_API_KEY] = key
+        }
+    }
+
+    suspend fun saveSimulatedMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[SIMULATED_MODE_KEY] = enabled
         }
     }
     

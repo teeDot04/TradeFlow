@@ -175,11 +175,29 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             val savedOkxSecret by viewModel.okxApiSecret.collectAsState()
                             val savedOkxPass by viewModel.okxApiPassphrase.collectAsState()
                             val savedDsKey by viewModel.deepSeekApiKey.collectAsState()
+                            val isSimulated by viewModel.simulatedMode.collectAsState()
 
                             var okxKey by remember(savedOkxKey) { mutableStateOf(savedOkxKey ?: "") }
                             var okxSecret by remember(savedOkxSecret) { mutableStateOf(savedOkxSecret ?: "") }
                             var okxPass by remember(savedOkxPass) { mutableStateOf(savedOkxPass ?: "") }
                             var dsKey by remember(savedDsKey) { mutableStateOf(savedDsKey ?: "") }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Simulated Mode (Dry Run)", style = MaterialTheme.typography.titleSmall)
+                                    Text("Simulates trades without calling OKX API. Works without balance.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Switch(
+                                    checked = isSimulated,
+                                    onCheckedChange = { viewModel.saveSimulatedMode(it) }
+                                )
+                            }
+                            
+                            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                             OutlinedTextField(
                                 value = okxKey,
