@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary Colors -->
-    <color name="primary">#FF8A80</color>
-    <color name="primary_dark">#D50000</color>
-    <color name="primary_light">#FFCDD2</color>
-    <color name="accent">#FF5252</color>
+    <color name="primary">#00D7E0</color>
+    <color name="primary_dark">#00A8B0</color>
+    <color name="primary_light">#E0FBFC</color>
+    <color name="accent">#00F5FF</color>
     
     <!-- Background Colors - Light -->
-    <color name="background_light">#F5F5F5</color>
+    <color name="background_light">#F8F9FA</color>
     <color name="surface_light">#FFFFFF</color>
     <color name="card_light">#FFFFFF</color>
     
     <!-- Background Colors - Dark -->
-    <color name="background_dark">#121212</color>
-    <color name="surface_dark">#1E1E1E</color>
-    <color name="card_dark">#2C2C2C</color>
+    <color name="background_dark">#0D1B2A</color>
+    <color name="surface_dark">#1B263B</color>
+    <color name="card_dark">#415A77</color>
     
     <!-- Text Colors -->
-    <color name="text_primary_light">#212121</color>
-    <color name="text_secondary_light">#757575</color>
-    <color name="text_primary_dark">#FFFFFF</color>
-    <color name="text_secondary_dark">#B0B0B0</color>
+    <color name="text_primary_light">#0D1B2A</color>
+    <color name="text_secondary_light">#415A77</color>
+    <color name="text_primary_dark">#E0FBFC</color>
+    <color name="text_secondary_dark">#778DA9</color>
     
     <!-- Status Colors -->
-    <color name="profit_green">#4CAF50</color>
-    <color name="loss_red">#F44336</color>
-    <color name="warning_yellow">#FFC107</color>
-    <color name="info_blue">#2196F3</color>
+    <color name="profit_green">#00FF88</color>
+    <color name="loss_red">#FF4D4D</color>
+    <color name="warning_yellow">#FFD700</color>
+    <color name="info_blue">#00F5FF</color>
     
     <!-- System Colors -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
-    <color name="divider">#E0E0E0</color>
-    <color name="divider_dark">#424242</color>
+    <color name="divider">#DEE2E6</color>
+    <color name="divider_dark">#778DA9</color>
 </resources>

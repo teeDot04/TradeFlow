@@ -122,9 +122,7 @@
                             android:id="@+id/heartbeatLed"
                             android:layout_width="12dp"
                             android:layout_height="12dp"
-                            android:layout_weight="1"
-                            android:src="@drawable/ic_launcher_foreground"
-                            app:tint="@color/profit_green"
+                            android:src="@drawable/heartbeat_led"
                             android:alpha="0.3"
                             android:contentDescription="Heartbeat LED" />
 
@@ -144,7 +142,7 @@
                         android:backgroundTint="@color/loss_red"
                         android:textColor="@android:color/white"
                         android:layout_marginBottom="12dp"
-                        app:icon="@android:drawable/ic_dialog_alert"
+                        app:icon="@drawable/ic_panic"
                         app:iconTint="@android:color/white" />
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -195,7 +193,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@android:drawable/ic_menu_day"
+        android:src="@drawable/ic_theme"
         android:contentDescription="@string/theme" />
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

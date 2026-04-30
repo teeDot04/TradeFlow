@@ -1,0 +1,17 @@
+# Local build tools
+corretto17.zip
+gradle-8.9.zip
+openjdk17.zip
+jdk-17/
+.venv/
+__pycache__/
+*.apk
+
+# Android build artifacts
+.gradle/
+build/
+app/build/
+*.iml
+.idea/
+local.properties
+.DS_Store
