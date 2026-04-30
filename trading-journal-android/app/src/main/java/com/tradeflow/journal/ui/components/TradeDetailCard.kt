@@ -178,6 +178,26 @@ fun TradeDetailCard(
                 )
             }
             
+            // AI Rationale
+            Divider()
+            Text(
+                "AI Rationale & Notes",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Text(
+                    trade.notes.ifEmpty { "No rationale provided." },
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
             // --- Advanced AI Data (Claude Model) ---
             if (trade.microstructure != null || trade.marketContext != null || trade.riskMetrics != null) {
                 Divider()
@@ -214,6 +234,7 @@ fun TradeDetailCard(
                     }
                 }
             }
+
 
             Spacer(modifier = Modifier.height(8.dp))
 

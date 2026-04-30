@@ -109,57 +109,30 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
+                                        val isActive = viewModel.isAgentActive.value
                                         Text(
-                                            "Status: Active",
+                                            "Status: ${if (isActive) "Active" else "Hibernating"}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                         )
                                     }
                                 }
-                            }
-                            
-                            // Git URL is now hardcoded in UserPreferencesRepository
-                            
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Link,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    "Linked to Git Repository",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                Switch(
+                                    checked = viewModel.isAgentActive.value,
+                                    onCheckedChange = { viewModel.toggleAgent(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
                                 )
                             }
                             
-                            // Private Repo Support
-                            val savedToken by viewModel.gitToken.collectAsState()
-                            var tokenInput by remember(savedToken) { mutableStateOf(savedToken ?: "") }
-                            
-                            OutlinedTextField(
-                                value = tokenInput,
-                                onValueChange = { 
-                                    tokenInput = it
-                                    viewModel.saveGitToken(it)
-                                },
-                                label = { Text("GitHub Token (Private Repo)") },
-                                placeholder = { Text("ghp_...") },
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
+                            Text(
+                                "Master kill-switch for all autonomous scanning and trading. Useful for emergency halts during consecutive crashes.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -175,12 +148,14 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                             val savedOkxSecret by viewModel.okxApiSecret.collectAsState()
                             val savedOkxPass by viewModel.okxApiPassphrase.collectAsState()
                             val savedDsKey by viewModel.deepSeekApiKey.collectAsState()
+                            val savedCpKey by viewModel.cryptoPanicApiKey.collectAsState()
                             val isSimulated by viewModel.simulatedMode.collectAsState()
 
                             var okxKey by remember(savedOkxKey) { mutableStateOf(savedOkxKey ?: "") }
                             var okxSecret by remember(savedOkxSecret) { mutableStateOf(savedOkxSecret ?: "") }
                             var okxPass by remember(savedOkxPass) { mutableStateOf(savedOkxPass ?: "") }
                             var dsKey by remember(savedDsKey) { mutableStateOf(savedDsKey ?: "") }
+                            var cpKey by remember(savedCpKey) { mutableStateOf(savedCpKey ?: "") }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -234,11 +209,21 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp)
                             )
+                            OutlinedTextField(
+                                value = cpKey,
+                                onValueChange = { cpKey = it },
+                                label = { Text("CryptoPanic API Key (Optional News)") },
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
 
                             Button(
                                 onClick = {
                                     viewModel.saveOkxCredentials(okxKey, okxSecret, okxPass)
                                     viewModel.saveDeepSeekKey(dsKey)
+                                    viewModel.saveCryptoPanicKey(cpKey)
                                     Toast.makeText(context, "API Credentials Saved", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -384,19 +369,7 @@ fun SettingsScreen(viewModel: TradeViewModel, navController: androidx.navigation
 
 
             
-            // --- ABOUT ---
-            item {
-                SettingsSection(title = "System Intelligence") {
-                    SettingsCard {
-                        SettingsActionItem(
-                            icon = Icons.Outlined.Info,
-                            title = "How It Works (The Brain)",
-                            subtitle = "Deep dive into bot logic & math",
-                            onClick = { navController.navigate("about") }
-                        )
-                    }
-                }
-            }
+
 
             // --- FOOTER ---
             item {

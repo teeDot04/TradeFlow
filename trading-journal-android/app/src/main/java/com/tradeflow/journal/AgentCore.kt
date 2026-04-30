@@ -167,6 +167,7 @@ object AgentCore {
         val okxSecret = prefs.okxApiSecret.first() ?: ""
         val okxPass = prefs.okxApiPassphrase.first() ?: ""
         val deepseekKey = prefs.deepSeekApiKey.first() ?: ""
+        val cryptopanicKey = prefs.cryptoPanicApiKey.first() ?: ""
         
         val isSimulated = prefs.simulatedMode.first()
         
@@ -180,6 +181,14 @@ object AgentCore {
             return
         }
 
+        // Fetch News if key is available
+        var newsContext = "No recent news available."
+        if (cryptopanicKey.isNotEmpty()) {
+            ThoughtManager.addThought("Fetching latest news for $instId...", 40)
+            val coin = instId.split("-")[0]
+            newsContext = fetchNews(cryptopanicKey, coin)
+        }
+
         ThoughtManager.addThought("Consulting DeepSeek for $instId...", 50)
         
         val deepSeekRequest = """
@@ -187,7 +196,7 @@ object AgentCore {
             "model": "deepseek-v4-flash",
             "messages": [
                 {"role": "system", "content": "You are a sovereign trading assistant. Respond ONLY with a JSON object containing keys 'action' (string: 'BUY' or 'NO_ACTION'), 'rationale' (string), 'confidence' (integer 0-100)."},
-                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice. ${if(instId.contains("TEST")) "PLEASE RESPOND WITH ACTION: BUY FOR SYSTEM TEST." else ""}"}
+                {"role": "user", "content": "Analyze drop for $instId. Current price: $currentPrice.\n\nNEWS CONTEXT:\n$newsContext\n\n${if(instId.contains("TEST")) "PLEASE RESPOND WITH ACTION: BUY FOR SYSTEM TEST." else ""}"}
             ],
             "response_format": {"type": "json_object"}
         }
@@ -373,5 +382,29 @@ object AgentCore {
         try {
             client.newCall(request).execute().close()
         } catch (e: Exception) { }
+    }
+
+    private fun fetchNews(apiKey: String, coin: String): String {
+        val url = "https://cryptopanic.com/api/v1/posts/?auth_token=$apiKey&currencies=$coin&filter=important&kind=news"
+        val request = Request.Builder().url(url).build()
+        
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
+                    val results = json.getAsJsonArray("results")
+                    if (results != null && results.size() > 0) {
+                        val headlines = mutableListOf<String>()
+                        for (i in 0 until minOf(results.size(), 3)) {
+                            val post = results.get(i).asJsonObject
+                            val title = post.get("title").asString
+                            val sentiment = post.get("votes")?.asJsonObject?.get("positive")?.asInt ?: 0
+                            headlines.add("- $title (Positive votes: $sentiment)")
+                        }
+                        headlines.joinToString("\n")
+                    } else "No major news found for $coin."
+                } else "Failed to fetch news."
+            }
+        } catch (e: Exception) { "Error fetching news: ${e.message}" }
     }
 }

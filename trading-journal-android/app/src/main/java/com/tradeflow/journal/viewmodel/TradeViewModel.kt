@@ -33,7 +33,9 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
     val okxApiSecret: StateFlow<String?>
     val okxApiPassphrase: StateFlow<String?>
     val deepSeekApiKey: StateFlow<String?>
+    val cryptoPanicApiKey: StateFlow<String?>
     val simulatedMode: StateFlow<Boolean>
+    val isAgentActive = mutableStateOf(com.tradeflow.journal.AgentCore.isSystemEnabled)
     
     val thoughts: StateFlow<List<Thought>> = ThoughtManager.thoughts
     
@@ -97,6 +99,12 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = true
+        )
+
+        cryptoPanicApiKey = preferencesRepository.cryptoPanicApiKey.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
         )
         
         // Auto-Sync Git Journal on App Start
@@ -492,6 +500,17 @@ class TradeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             preferencesRepository.saveSimulatedMode(enabled)
         }
+    }
+
+    fun saveCryptoPanicKey(key: String) {
+        viewModelScope.launch {
+            preferencesRepository.saveCryptoPanicKey(key)
+        }
+    }
+
+    fun toggleAgent(active: Boolean) {
+        com.tradeflow.journal.AgentCore.toggleAgent(active)
+        isAgentActive.value = active
     }
 
     private fun showTradeNotification(count: Int) {
